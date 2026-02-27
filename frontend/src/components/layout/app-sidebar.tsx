@@ -51,6 +51,7 @@ import {
   HelpCircle,
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/auth-provider';
+import { CLAN_NAME, CLAN_INITIAL, CLAN_SUBTITLE } from '@/lib/clan-config';
 
 const mainNavItems = [
   { title: 'Trang chủ', url: '/', icon: Home },
@@ -76,6 +77,7 @@ const adminNavItems = [
   { title: 'QL Hương ước', url: '/admin/charter', icon: ScrollText },
   { title: 'QL Cầu đương', url: '/admin/cau-duong', icon: RotateCcw },
   { title: 'QL Tài liệu', url: '/admin/documents', icon: FileText },
+  { title: 'Cài đặt', url: '/admin/settings', icon: Settings },
   ...(process.env.NEXT_PUBLIC_DESKTOP_MODE === 'true'
     ? [{ title: 'Xuất / Nhập dữ liệu', url: '/admin/import-export', icon: FileArchive }]
     : []),
@@ -95,11 +97,11 @@ export function AppSidebar() {
       <SidebarHeader className="border-b px-4 py-4">
         <Link href="/" className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-lg">
-            Đ
+            {CLAN_INITIAL}
           </div>
           <div className="flex flex-col">
-            <span className="font-semibold text-sm">Họ Đặng</span>
-            <span className="text-xs text-muted-foreground">làng Kỷ Các</span>
+            <span className="font-semibold text-sm">{CLAN_NAME}</span>
+            {CLAN_SUBTITLE && <span className="text-xs text-muted-foreground">{CLAN_SUBTITLE}</span>}
           </div>
         </Link>
       </SidebarHeader>

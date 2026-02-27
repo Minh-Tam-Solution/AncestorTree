@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/components/auth/auth-provider';
 import { toast } from 'sonner';
+import { CLAN_FULL_NAME, CLAN_INITIAL } from '@/lib/clan-config';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -38,11 +39,11 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto w-12 h-12 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-bold text-xl mb-4">
-            Đ
+            {CLAN_INITIAL}
           </div>
           <CardTitle>Đăng nhập</CardTitle>
           <CardDescription>
-            Đăng nhập vào Gia Phả Điện Tử - Họ Đặng làng Kỷ Các
+            Đăng nhập vào Gia Phả Điện Tử - {CLAN_FULL_NAME}
           </CardDescription>
         </CardHeader>
         <CardContent>

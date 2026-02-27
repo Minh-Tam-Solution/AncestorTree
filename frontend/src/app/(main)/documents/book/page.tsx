@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Printer, User, Users, Heart } from 'lucide-react';
+import { CLAN_FULL_NAME } from '@/lib/clan-config';
 
 function PersonEntry({ entry }: { entry: BookPerson }) {
   const { person, father, mother, spouses, children, zodiacYear } = entry;
@@ -181,7 +182,7 @@ export default function BookPage() {
             Gia Phả
           </h1>
           <h2 className="text-xl md:text-2xl font-semibold text-emerald-700 mb-4">
-            Họ Đặng làng Kỷ Các
+            {CLAN_FULL_NAME}
           </h2>
           <p className="text-muted-foreground italic mb-6">
             &ldquo;Gìn giữ tinh hoa - Tiếp bước cha ông&rdquo;
@@ -216,7 +217,7 @@ export default function BookPage() {
 
         {/* Footer */}
         <div className="text-center text-sm text-muted-foreground border-t pt-6">
-          <p>Gia Phả Điện Tử - Họ Đặng làng Kỷ Các</p>
+          <p>Gia Phả Điện Tử - {CLAN_FULL_NAME}</p>
           <p>Được tạo bởi AncestorTree · {new Date().getFullYear()}</p>
         </div>
       </div>
