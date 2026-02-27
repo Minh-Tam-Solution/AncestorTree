@@ -2,8 +2,8 @@
 project: AncestorTree
 path: docs/00-foundation/VISION.md
 type: foundation
-version: 1.0.0
-updated: 2026-02-25
+version: 3.0.0
+updated: 2026-02-27
 owner: "@pm, @cto"
 status: approved
 ---
@@ -59,7 +59,7 @@ Họ Đặng làng Kỷ Các — dòng họ đầu tiên sử dụng hệ thốn
 
 ## 3. Scope
 
-### 3.1 In Scope (v1.0 - v1.3)
+### 3.1 Delivered (v0.1.0 – v2.1.0) ✅
 
 | Version | Features | Sprint |
 |---------|----------|--------|
@@ -69,22 +69,29 @@ Họ Đặng làng Kỷ Các — dòng họ đầu tiên sử dụng hệ thốn
 | **v1.1.0 Enhanced** | Directory, Memorial calendar, Lunar dates, Contributions | Sprint 4 |
 | **v1.2.0 Release** | GEDCOM export, Book generator, Photos, Polish | Sprint 5 |
 | **v1.3.0 Culture** | Achievement honors, Education fund, Family charter | Sprint 6 |
+| **v1.4.0 Ceremony** | Cầu đương — DFS rotation algorithm | Sprint 7 |
+| **v1.5.0 Relations** | Family Relations UX, Tree hierarchical layout | Sprint 7.5 |
+| **v1.6.0 Local Dev** | Supabase CLI + Docker, zero-config local mode | Sprint 8 |
+| **v1.7.0 Security** | RLS hardening, privacy defaults, contact protection | Sprint 8B |
+| **v2.0.0 Desktop** | Electron + sql.js standalone app (Win + macOS) | Sprint 9 |
+| **v2.1.0 Landing** | Public landing page, SEO, community funnel | Sprint 10 |
 
-### 3.2 Out of Scope (v1.x)
+### 3.2 Planned (v2.2.0 – v3.0.0) 📋
 
-- Native mobile app (iOS/Android)
+| Version | Features | Sprint | Nguồn |
+| --------- | ---------- | -------- | ------- |
+| **v2.2.0 Kho tài liệu** | Lưu trữ ảnh cũ, giấy tờ, video, bản đồ gia đình | Sprint 11 | PM đề xuất |
+| **v2.3.0 Góc giao lưu** | Feed chia sẻ ảnh quê, tin nhắn cho người trẻ + Việt kiều | Sprint 12 | Phản hồi người dùng |
+| **v2.4.0 Thông báo** | Email nhắc ngày giỗ, sự kiện mới | Sprint 13 | PM đề xuất |
+| **v2.5.0 Export/Import** | Desktop ↔ Web data migration, GEDCOM import, CSV export | Sprint 14 | PM đề xuất |
+| **v3.0.0 Cộng đồng** | Nhà thờ họ, đa ngôn ngữ, cross-clan, PWA | Sprint 15+ | Tầm nhìn dài hạn |
+
+### 3.3 Out of Scope
+
 - DNA/genetic testing integration
-- Multi-language support (chỉ tiếng Việt v1.x)
-- Offline-first capability
-- Real-time chat/messaging
-
-### 3.3 Future Considerations (v2.0+)
-
-- Nhà thờ họ (map, ảnh 360°)
-- Thông báo ngày giỗ (push notification)
-- Cross-clan linking (kết nối liên dòng họ)
-- BOT hỗ trợ nhập liệu
-- Native mobile apps
+- Native mobile app iOS/Android (xem xét PWA trước)
+- BOT hỗ trợ nhập liệu (AI chatbot)
+- Real-time video call
 
 ---
 

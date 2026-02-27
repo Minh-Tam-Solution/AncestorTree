@@ -21,6 +21,7 @@ status: approved
 | 1.4.0   | 2026-02-26 | @architect | Add Local Development Mode — Supabase CLI + Docker (Sprint 8) |
 | 1.5.0   | 2026-02-26 | @architect | Add Desktop App Architecture — Electron + sql.js Shim (Sprint 9 Phase 1) |
 | 2.1.0   | 2026-02-26 | @pm        | Add Landing Page route group + SEO architecture (Sprint 10) |
+| 2.2.0   | 2026-02-27 | @pm        | Add In-App Help Page `/help` route (Sprint 11)    |
 
 ---
 
@@ -823,6 +824,7 @@ src/
 │   │   ├── achievements/page.tsx     # Achievement honors (v1.1)
 │   │   ├── fund/page.tsx             # Education fund dashboard (v1.1)
 │   │   ├── charter/page.tsx          # Hương ước / Clan rules (v1.1)
+│   │   ├── help/page.tsx             # In-app help guide (v2.2)
 │   │   └── admin/
 │   │       ├── page.tsx              # Admin dashboard
 │   │       ├── users/page.tsx        # User management

@@ -88,6 +88,7 @@ AncestorTree/
 │   │       ├── documents/book/     # Gia phả sách (Sprint 5)
 │   │       ├── events/             # Lịch sự kiện (Sprint 4)
 │   │       ├── fund/               # Quỹ khuyến học (Sprint 6)
+│   │       ├── help/               # Hướng dẫn sử dụng (Sprint 11)
 │   │       ├── people/             # Quản lý thành viên
 │   │       ├── tree/               # Cây gia phả
 │   │       └── admin/              # Admin panel

@@ -2,8 +2,8 @@
 project: AncestorTree
 path: docs/04-build/SPRINT-PLAN.md
 type: build
-version: 2.1.0
-updated: 2026-02-26
+version: 3.0.0
+updated: 2026-02-27
 owner: "@pm"
 status: approved
 ---
@@ -25,7 +25,15 @@ Sprint 7  ███████████████████████�
 Sprint 7.5 ██████████████████████████████ (same day)             ✅ DONE
 Sprint 8  ████████████████████████████████ Week 8 (Apr 14-18)    ✅ DONE
 Sprint 9  ████████████████████████████████ Week 9 (Feb 26)       ✅ DONE (Phase 1-3)
-Sprint 10 ████████████████████████████████ Week 10 (Feb 26+)     🔄 IN PROGRESS
+Sprint 10 ████████████████████████████████ Week 10 (Feb 26-27)    ✅ DONE
+
+--- Future (community contribution / owner has time) ---
+
+Sprint 11 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ v2.2.0 Kho tài liệu     📋 PLANNED
+Sprint 12 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ v2.3.0 Góc giao lưu     📋 PLANNED
+Sprint 13 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ v2.4.0 Thông báo        📋 PLANNED
+Sprint 14 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ v2.5.0 Export/Import    📋 PLANNED
+Sprint 15 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ v3.0.0 Nhà thờ họ       📋 PLANNED
 
 Milestones:
 ├── v0.1.0 Alpha    → End Sprint 1    ✅
@@ -1133,21 +1141,170 @@ frontend/
 
 | ID | Criteria | Status |
 |----|----------|--------|
-| AC-S10-01 | `/welcome` loads without login — all 7 sections visible | ⏳ |
-| AC-S10-02 | `/` still redirects to login (existing behavior preserved) | ⏳ |
-| AC-S10-03 | Download links point to GitHub Releases (State B OK for launch) | ⏳ |
-| AC-S10-04 | Community links to GitHub Issues/Discussions work | ⏳ |
-| AC-S10-05 | canonical URL set to `https://ancestortree.info/welcome` | ⏳ |
-| AC-S10-06 | `robots.txt` disallows auth/app pages, allows `/welcome` | ⏳ |
-| AC-S10-07 | Mobile responsive (375px, 768px, 1024px) | ⏳ |
-| AC-S10-08 | 8 community docs updated to v2.1.0 with landing URL + desktop info | ⏳ |
-| AC-S10-09 | `pnpm build` passes without errors | ⏳ |
+| AC-S10-01 | `/welcome` loads without login — 9 sections visible | ✅ |
+| AC-S10-02 | `/` still redirects to login (existing behavior preserved) | ✅ |
+| AC-S10-03 | Download links point to GitHub Releases (.exe, .dmg) | ✅ |
+| AC-S10-04 | Community links to GitHub Issues/Discussions work | ✅ |
+| AC-S10-05 | canonical URL set to `https://ancestortree.info/welcome` | ✅ |
+| AC-S10-06 | `robots.txt` disallows auth/app pages, allows `/welcome` | ✅ |
+| AC-S10-07 | Mobile responsive (375px, 768px, 1024px) | ✅ |
+| AC-S10-08 | 8 community docs updated to v2.1.0 with landing URL + desktop info | ✅ |
+| AC-S10-09 | `pnpm build` passes without errors | ✅ |
 
 ### Dependencies
 
-- Requires: Sprint 9 complete (desktop build targets for download links)
-- Requires: Vercel account with custom domain support
-- Requires: Domain `ancestortree.info` configured on Vercel
+- Requires: Sprint 9 complete (desktop build targets for download links) ✅
+- Requires: Vercel account with custom domain support ✅
+- Requires: Domain `ancestortree.info` configured on Vercel ✅
+
+---
+
+## Sprint 11 — Kho tài liệu (v2.2.0) 📋
+
+**Status:** Planned — community contribution hoặc owner implement khi có thời gian
+**Goal:** Lưu trữ tài liệu, ảnh cũ, giấy tờ, video — kho ký ức dòng họ
+**Ước lượng:** ~4-6 giờ (theo pattern Sprint 6 — CRUD module)
+
+### Tasks
+
+| # | Task | Est. | Owner |
+| --- | --- | --- | --- |
+| S11-01 | DB: Bảng `documents` (title, category, description, file_url, file_size, uploaded_by, tags, person_ids, is_public) + RLS policies | 30m | @dev |
+| S11-02 | Types: `Document`, `DocumentCategory` interfaces in `types/index.ts` | 15m | @dev |
+| S11-03 | Data layer: `supabase-data-documents.ts` — CRUD + search + filter by category | 45m | @dev |
+| S11-04 | Hooks: `use-documents.ts` — React Query hooks | 30m | @dev |
+| S11-05 | Storage: Supabase bucket `documents/` config, upload helper | 30m | @dev |
+| S11-06 | Public page: `/documents` gallery view (grid/list) + filter + search | 60m | @dev |
+| S11-07 | Admin page: `/admin/documents` — CRUD + approve uploads | 45m | @dev |
+| S11-08 | Sidebar: Add "Kho tài liệu" nav item | 5m | @dev |
+| S11-09 | Desktop: SQLite table + migration + shim support | 30m | @dev |
+| S11-10 | Build & verify (Kho tài liệu) | 15m | @dev |
+| S11-11 | In-App Help Page: `/help` — Hướng dẫn sử dụng chi tiết (5 sections: điều hướng, workflow, phân quyền, mẹo, FAQ) + Desktop conditional sections | 60m | @dev |
+| S11-12 | Sidebar: Add "Hướng dẫn" nav item (HelpCircle icon) | 5m | @dev |
+| S11-13 | Middleware: Add `/help` to authRequiredPaths | 5m | @dev |
+| S11-14 | Build & verify (Help page) | 10m | @dev |
+
+### Categories
+
+| Category | Ý nghĩa | Ví dụ |
+| --- | --- | --- |
+| **Ảnh lịch sử** | Ảnh cũ, ảnh gia đình | Ảnh thủy tổ, ảnh nhà thờ 1960 |
+| **Giấy tờ** | Văn bản, giấy khen | Gia phả viết tay, sắc phong |
+| **Bản đồ** | Bản đồ địa phương | Bản đồ làng, sơ đồ nhà thờ |
+| **Video** | Video sự kiện | Lễ giỗ tổ, họp họ, phóng sự |
+| **Bài viết** | Lịch sử, hồi ký | Lịch sử dòng họ, hồi ức |
+| **Khác** | Tài liệu khác | Nhạc lễ, bản thiết kế |
+
+### Acceptance Criteria
+
+| ID | Criteria | Status |
+| --- | --- | --- |
+| AC-S11-01 | `/help` page renders 5 sections (điều hướng, workflow, phân quyền, mẹo, FAQ) | ⏳ |
+| AC-S11-02 | Desktop mode shows backup guide + Desktop vs Web table | ⏳ |
+| AC-S11-03 | Sidebar shows "Hướng dẫn" with HelpCircle icon | ⏳ |
+| AC-S11-04 | Unauthenticated → `/help` redirects to `/welcome` | ⏳ |
+| AC-S11-05 | Upload tài liệu (ảnh, PDF) hoạt động | ⏳ |
+| AC-S11-06 | Gallery view với filter theo category | ⏳ |
+| AC-S11-07 | Admin CRUD + approve uploads | ⏳ |
+| AC-S11-08 | Desktop mode hỗ trợ đầy đủ (Kho tài liệu) | ⏳ |
+| AC-S11-09 | `pnpm build` passes | ⏳ |
+
+---
+
+## Sprint 12 — Góc giao lưu (v2.3.0) 📋
+
+**Status:** Planned — community contribution hoặc owner implement khi có thời gian
+**Goal:** Không gian chia sẻ cho người trẻ + Việt kiều — gửi ảnh quê, giao lưu
+**Ước lượng:** ~6-8 giờ (phức tạp hơn — multi-image, realtime optional)
+
+> 💡 **Từ phản hồi người dùng:** "Người trẻ cũng nhiều, đi khắp trong nước, có cả nước ngoài.
+> Có box giao lưu thi thoảng gửi cái ảnh ở quê cho người xa nhà."
+
+### Tasks
+
+| # | Task | Est. | Owner |
+| --- | --- | --- | --- |
+| S12-01 | DB: Bảng `posts` (author_id, content, images[], created_at) + RLS | 30m | @dev |
+| S12-02 | DB: Bảng `post_comments` (post_id, author_id, content, created_at) | 15m | @dev |
+| S12-03 | DB: Bảng `post_reactions` (post_id, user_id, type) + unique constraint | 15m | @dev |
+| S12-04 | Types: `Post`, `PostComment`, `PostReaction` interfaces | 15m | @dev |
+| S12-05 | Data layer: `supabase-data-feed.ts` — posts CRUD + comments + reactions | 60m | @dev |
+| S12-06 | Hooks: `use-feed.ts` — React Query + optimistic updates | 45m | @dev |
+| S12-07 | Feed page: `/feed` — timeline, create post, multi-image upload | 90m | @dev |
+| S12-08 | Comments: Inline comment list + add comment form | 45m | @dev |
+| S12-09 | Reactions: Heart/like button with count | 15m | @dev |
+| S12-10 | Admin: Moderation — ẩn/xóa bài không phù hợp | 30m | @dev |
+| S12-11 | Sidebar: Add "Góc giao lưu" nav item | 5m | @dev |
+| S12-12 | Desktop: SQLite tables + migrations + shim | 30m | @dev |
+| S12-13 | Build & verify | 15m | @dev |
+
+### Acceptance Criteria
+
+| ID | Criteria | Status |
+| --- | --- | --- |
+| AC-S12-01 | Đăng bài + ảnh (multi-image) hoạt động | ⏳ |
+| AC-S12-02 | Comment dưới bài viết | ⏳ |
+| AC-S12-03 | Like/react bài viết | ⏳ |
+| AC-S12-04 | Feed timeline sorted by newest | ⏳ |
+| AC-S12-05 | Admin moderation (ẩn/xóa) | ⏳ |
+| AC-S12-06 | Desktop mode hỗ trợ đầy đủ | ⏳ |
+| AC-S12-07 | `pnpm build` passes | ⏳ |
+
+---
+
+## Sprint 13 — Thông báo & Nhắc nhở (v2.4.0) 📋
+
+**Status:** Planned
+**Goal:** Email nhắc ngày giỗ, thông báo sự kiện mới
+**Ước lượng:** ~4-6 giờ
+
+### S13 Tasks
+
+| # | Task | Est. | Owner |
+| --- | --- | --- | --- |
+| S13-01 | Email service: Supabase Edge Function + Resend/SendGrid | 60m | @dev |
+| S13-02 | DB: Bảng `notification_preferences` (user_id, type, enabled) | 15m | @dev |
+| S13-03 | Giỗ reminders: Cron job gửi email 3 ngày trước ngày giỗ | 60m | @dev |
+| S13-04 | Event alerts: Thông báo sự kiện mới, bài viết mới | 30m | @dev |
+| S13-05 | Preferences page: UI cài đặt on/off per notification type | 30m | @dev |
+| S13-06 | In-app notifications: Bell icon + dropdown (optional) | 45m | @dev |
+| S13-07 | Build & verify | 15m | @dev |
+
+---
+
+## Sprint 14 — Export/Import & Đồng bộ (v2.5.0) 📋
+
+**Status:** Planned
+**Goal:** Chuyển dữ liệu Desktop ↔ Web, GEDCOM import, CSV export
+**Ước lượng:** ~4-6 giờ
+
+### S14 Tasks
+
+| # | Task | Est. | Owner |
+| --- | --- | --- | --- |
+| S14-01 | ZIP export: DB + media → .zip file (Desktop) | 60m | @dev |
+| S14-02 | ZIP import: Restore từ .zip file | 60m | @dev |
+| S14-03 | GEDCOM import: Parse .ged → tạo people + families | 90m | @dev |
+| S14-04 | CSV export: Danh sách thành viên → Excel/CSV | 30m | @dev |
+| S14-05 | Desktop → Web sync: Guide + migration script | 30m | @dev |
+| S14-06 | Build & verify | 15m | @dev |
+
+---
+
+## Sprint 15+ — Nhà thờ họ & Cộng đồng (v3.0.0) 📋
+
+**Status:** Future — Q2-Q3 2026
+**Goal:** Mở rộng cho cộng đồng rộng hơn
+
+### Features (chưa chi tiết)
+
+| Feature | Mô tả | Priority |
+| --- | --- | --- |
+| **Nhà thờ họ** | Thông tin, bản đồ, ảnh 360°, lịch sử | P2 |
+| **Đa ngôn ngữ** | English UI cho Việt kiều (next-intl) | P2 |
+| **Cross-clan** | Kết nối liên dòng họ, shared events | P3 |
+| **Multi-tenant** | Nhiều dòng họ trên 1 instance | P3 |
+| **PWA Mobile** | Progressive Web App cho điện thoại | P2 |
 
 ---
 

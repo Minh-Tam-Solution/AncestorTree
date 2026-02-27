@@ -18,7 +18,7 @@ const authRequiredPaths = [
   '/',
   '/people', '/tree', '/directory', '/events',
   '/achievements', '/charter', '/cau-duong', '/contributions',
-  '/documents', '/fund', '/admin',
+  '/documents', '/fund', '/admin', '/help',
 ];
 
 export async function middleware(request: NextRequest) {

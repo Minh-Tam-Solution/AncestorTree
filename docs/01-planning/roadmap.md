@@ -2,8 +2,8 @@
 project: AncestorTree
 path: docs/01-planning/roadmap.md
 type: planning
-version: 2.1.0
-updated: 2026-02-26
+version: 3.0.0
+updated: 2026-02-27
 owner: "@pm"
 status: approved
 ---
@@ -24,11 +24,11 @@ status: approved
 | **Test + Ship** | Chiều–tối 25/02 | QA, code review, hotfix, deploy Vercel, ship to community |
 | **Sprint 8 — Local Dev + Security** | 26/02/2026 | Supabase CLI + Docker local mode + RLS hardening |
 | **Sprint 9 — Desktop** | 26/02/2026 | Electron + sql.js standalone app (Phase 1-3 complete) |
-| **Sprint 10 — Landing Page** | 26/02/2026+ | Public landing page + community funnel + download links |
+| **Sprint 10 — Landing Page** | 26–27/02/2026 | Public landing page + community funnel + download links |
 
 **Tổng cộng:** ~36 giờ build · 1 người · 8 AI agents · TinySDLC methodology
 
-> Phần bên dưới là kế hoạch ban đầu — giữ lại như tài liệu tham khảo (planned vs actual).
+> **v2.1.0 hoàn thành.** Phần bên dưới bao gồm kế hoạch ban đầu (planned vs actual) + roadmap tương lai (v2.2.0 → v3.0.0) cho cộng đồng đóng góp.
 
 ---
 
@@ -287,26 +287,136 @@ status: approved
 
 **Exit Criteria:**
 
-- [ ] `/welcome` loads without login
-- [ ] Download links to GitHub Releases
-- [ ] Community links to GitHub Issues/Discussions
-- [ ] SEO: canonical + robots.txt
-- [ ] 8 community docs at v2.1.0
+- [x] `/welcome` loads without login — 9 sections + user guide + FAQ
+- [x] Download links to GitHub Releases (.exe, .dmg)
+- [x] Community links to GitHub Issues/Discussions
+- [x] SEO: canonical URL (`ancestortree.info`) + robots.txt
+- [x] 8 community docs at v2.1.0
 
 ---
 
-### v3.0.0 - Community (Future)
+### v2.2.0 - Kho tài liệu (Sprint 11)
 
-**Target:** Q2 2026+
-**Goal:** Features for broader community
+**Target:** Community contribution / Owner has time
+**Goal:** Lưu trữ tài liệu, ảnh cũ, giấy tờ, video — kho lưu giữ ký ức dòng họ
 
 | Epic | Stories | Priority |
 |------|---------|----------|
-| **Nhà thờ họ** | Ancestral hall info (map, ảnh 360°) | P2 |
-| **Notifications** | Thông báo ngày giỗ (push) | P2 |
-| **Cross-clan** | Kết nối liên dòng họ | P2 |
-| **Multi-tenant** | Multiple families | P2 |
-| **Native Apps** | iOS/Android | P2 |
+| **In-App Help** | `/help` — Hướng dẫn sử dụng chi tiết (5 sections, Desktop conditional) | P1 |
+| **DB Schema** | Bảng `documents` (title, category, file_url, uploaded_by, tags) + RLS | P1 |
+| **Upload/Storage** | Supabase Storage bucket `documents/`, max 10MB/file | P1 |
+| **Categories** | Ảnh lịch sử, Giấy tờ, Bản đồ, Video, Bài viết, Khác | P1 |
+| **Public View** | Gallery view + filter by category, search by title | P1 |
+| **Admin Panel** | CRUD documents, approve uploads, manage categories | P1 |
+| **Member Tags** | Gắn thẻ thành viên liên quan trong tài liệu | P2 |
+| **Desktop Support** | SQLite table + shim cho desktop mode | P1 |
+
+**Exit Criteria:**
+
+- [ ] `/help` page with 5 sections (điều hướng, workflow, phân quyền, mẹo, FAQ)
+- [ ] Upload/download tài liệu hoạt động (ảnh, PDF, video link)
+- [ ] Gallery view với filter theo category
+- [ ] Admin duyệt/quản lý tài liệu
+- [ ] Desktop mode hỗ trợ đầy đủ
+- [ ] `pnpm build` passes
+
+**Ước lượng:** ~4-6 giờ (theo pattern Sprint 6 — module mới với CRUD)
+
+---
+
+### v2.3.0 - Góc giao lưu (Sprint 12)
+
+**Target:** Community contribution / Owner has time
+**Goal:** Không gian chia sẻ cho người trẻ + Việt kiều — gửi ảnh quê, tin nhắn, giao lưu
+
+> 💡 **Từ phản hồi người dùng:** "Người trẻ cũng nhiều, đi khắp trong nước, có cả nước ngoài.
+> Có box giao lưu thi thoảng gửi cái ảnh ở quê cho người xa nhà."
+
+| Epic | Stories | Priority |
+|------|---------|----------|
+| **DB Schema** | Bảng `posts` (author_id, content, images, created_at) + `post_comments` + `post_reactions` | P1 |
+| **Feed Page** | `/feed` — timeline chia sẻ, sorted by newest | P1 |
+| **Post Creation** | Viết bài + đính kèm ảnh (multi-image upload) | P1 |
+| **Comments** | Bình luận dưới bài viết | P1 |
+| **Reactions** | Thả tim / like bài viết | P2 |
+| **Photo Albums** | "Ảnh quê hương", "Họp họ", "Tết", custom albums | P2 |
+| **Admin Moderation** | Ẩn/xóa bài không phù hợp | P1 |
+| **Desktop Support** | SQLite tables + shim cho desktop mode | P1 |
+
+**Exit Criteria:**
+
+- [ ] Thành viên đăng bài + ảnh được
+- [ ] Comment và react hoạt động
+- [ ] Feed timeline hiển thị đúng thứ tự
+- [ ] Admin moderation (ẩn/xóa)
+- [ ] Desktop mode hỗ trợ đầy đủ
+- [ ] `pnpm build` passes
+
+**Ước lượng:** ~6-8 giờ (phức tạp hơn — real-time optional, multi-image)
+
+---
+
+### v2.4.0 - Thông báo & Nhắc nhở (Sprint 13)
+
+**Target:** Community contribution / Owner has time
+**Goal:** Nhắc ngày giỗ, sự kiện mới qua email — không bỏ lỡ ngày quan trọng
+
+| Epic | Stories | Priority |
+|------|---------|----------|
+| **Email Service** | Supabase Edge Functions + Resend/SendGrid | P1 |
+| **Giỗ Reminders** | Tự động gửi email 3 ngày trước ngày giỗ | P1 |
+| **Event Alerts** | Thông báo sự kiện mới, bài viết mới | P2 |
+| **Preferences** | Cài đặt nhận thông báo (on/off per type) | P1 |
+| **In-app Notifications** | Bell icon + notification dropdown | P2 |
+
+**Exit Criteria:**
+
+- [ ] Email nhắc ngày giỗ gửi đúng 3 ngày trước
+- [ ] Cài đặt on/off thông báo hoạt động
+- [ ] In-app notification badge
+- [ ] `pnpm build` passes
+
+**Ước lượng:** ~4-6 giờ
+
+---
+
+### v2.5.0 - Export/Import & Đồng bộ (Sprint 14)
+
+**Target:** Community contribution / Owner has time
+**Goal:** Chuyển dữ liệu Desktop ↔ Web, GEDCOM import, CSV export
+
+| Epic | Stories | Priority |
+|------|---------|----------|
+| **ZIP Export** | Export toàn bộ DB + media → file .zip | P1 |
+| **ZIP Import** | Import .zip → khôi phục dữ liệu | P1 |
+| **GEDCOM Import** | Nhập gia phả từ file GEDCOM (.ged) | P2 |
+| **CSV Export** | Xuất danh sách thành viên → Excel/CSV | P1 |
+| **Desktop → Web Sync** | Hướng dẫn + script chuyển SQLite → Supabase | P2 |
+
+**Exit Criteria:**
+
+- [ ] ZIP export/import hoạt động (Desktop)
+- [ ] CSV export danh sách thành viên
+- [ ] GEDCOM import tạo được thành viên + quan hệ
+- [ ] `pnpm build` passes
+
+**Ước lượng:** ~4-6 giờ
+
+---
+
+### v3.0.0 - Nhà thờ họ & Cộng đồng (Sprint 15+)
+
+**Target:** Q2-Q3 2026
+**Goal:** Mở rộng cho cộng đồng — nhà thờ họ, đa ngôn ngữ, liên kết dòng họ
+
+| Epic | Stories | Priority |
+|------|---------|----------|
+| **Nhà thờ họ** | Thông tin, bản đồ, ảnh 360°, lịch sử nhà thờ tổ | P2 |
+| **Đa ngôn ngữ** | English UI cho Việt kiều (i18n next-intl) | P2 |
+| **Cross-clan** | Kết nối liên dòng họ, shared events | P3 |
+| **Multi-tenant** | Nhiều dòng họ trên 1 instance | P3 |
+| **PWA Mobile** | Progressive Web App cho điện thoại | P2 |
+| **Native Apps** | iOS/Android (React Native) | P3 |
 
 ---
 
@@ -478,18 +588,27 @@ status: approved
 | ZIP export/import works | Yes |
 | Web build (`pnpm build`) unaffected | Yes |
 
-### Sprint 10 — Landing Page
+### Sprint 10 — Landing Page ✅
 
-| Metric | Target |
-|--------|--------|
-| `/welcome` loads without login | Yes |
-| All 7 sections render correctly | Yes |
-| Download links → GitHub Releases | Yes |
-| Community links → GitHub Issues/Discussions | Yes |
-| SEO: canonical URL + robots.txt | Yes |
-| Mobile responsive (375px, 768px, 1024px) | Yes |
-| Community docs updated to v2.1.0 | Yes |
-| `pnpm build` passes | Yes |
+| Metric | Target | Actual |
+| -------- | -------- | -------- |
+| `/welcome` loads without login | Yes | ✅ 9 sections |
+| Download links → GitHub Releases | Yes | ✅ .exe + .dmg |
+| Community links → GitHub Issues/Discussions | Yes | ✅ |
+| SEO: canonical URL + robots.txt | Yes | ✅ ancestortree.info |
+| Mobile responsive (375px, 768px, 1024px) | Yes | ✅ |
+| Community docs updated to v2.1.0 | Yes | ✅ 8 files |
+| `pnpm build` passes | Yes | ✅ |
+
+### Sprint 11+ — Future Milestones
+
+| Sprint | Version | Feature | Metric |
+| -------- | --------- | --------- | -------- |
+| 11 | v2.2.0 | Kho tài liệu | Upload/download + gallery + admin |
+| 12 | v2.3.0 | Góc giao lưu | Feed + post + comment + reactions |
+| 13 | v2.4.0 | Thông báo | Email giỗ reminders + preferences |
+| 14 | v2.5.0 | Export/Import | ZIP + CSV + GEDCOM import |
+| 15+ | v3.0.0 | Nhà thờ họ & Cộng đồng | i18n + cross-clan + PWA |
 
 ---
 
