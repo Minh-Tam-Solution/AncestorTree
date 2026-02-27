@@ -9,6 +9,7 @@ out/
 # Build outputs
 dist/
 build/
+desktop/electron-dist/
 
 # Environment
 .env

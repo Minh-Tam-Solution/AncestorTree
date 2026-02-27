@@ -13,7 +13,7 @@ status: approved
 ## 0. What Actually Happened
 
 > **Planned:** 7 sprints over 6 weeks (Feb 24 – Apr 4, 2026)
-> **Actual: 10 sprints in 2 days.**
+> **Actual: 11 sprints in 3 days.**
 
 | Phase | When | What |
 | --- | --- | --- |
@@ -25,10 +25,11 @@ status: approved
 | **Sprint 8 — Local Dev + Security** | 26/02/2026 | Supabase CLI + Docker local mode + RLS hardening |
 | **Sprint 9 — Desktop** | 26/02/2026 | Electron + sql.js standalone app (Phase 1-3 complete) |
 | **Sprint 10 — Landing Page** | 26–27/02/2026 | Public landing page + community funnel + download links |
+| **Sprint 11 — Kho tài liệu + Help** | 27/02/2026 | In-App Help page + Document repository (library + admin CRUD) |
 
-**Tổng cộng:** ~36 giờ build · 1 người · 8 AI agents · TinySDLC methodology
+**Tổng cộng:** ~40 giờ build · 1 người · 8 AI agents · TinySDLC methodology
 
-> **v2.1.0 hoàn thành.** Phần bên dưới bao gồm kế hoạch ban đầu (planned vs actual) + roadmap tương lai (v2.2.0 → v3.0.0) cho cộng đồng đóng góp.
+> **v2.2.0 hoàn thành.** Phần bên dưới bao gồm kế hoạch ban đầu (planned vs actual) + roadmap tương lai (v2.3.0 → v3.0.0) cho cộng đồng đóng góp.
 
 ---
 
@@ -313,12 +314,12 @@ status: approved
 
 **Exit Criteria:**
 
-- [ ] `/help` page with 5 sections (điều hướng, workflow, phân quyền, mẹo, FAQ)
-- [ ] Upload/download tài liệu hoạt động (ảnh, PDF, video link)
-- [ ] Gallery view với filter theo category
-- [ ] Admin duyệt/quản lý tài liệu
-- [ ] Desktop mode hỗ trợ đầy đủ
-- [ ] `pnpm build` passes
+- [x] `/help` page with 5 sections (điều hướng, workflow, phân quyền, mẹo, FAQ)
+- [x] Upload/download tài liệu hoạt động (ảnh, PDF, video link)
+- [x] Gallery view với filter theo category
+- [x] Admin duyệt/quản lý tài liệu
+- [x] Desktop mode hỗ trợ đầy đủ
+- [x] `pnpm build` passes (36 routes, 0 errors)
 
 **Ước lượng:** ~4-6 giờ (theo pattern Sprint 6 — module mới với CRUD)
 

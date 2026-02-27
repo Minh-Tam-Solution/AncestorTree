@@ -14,7 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { useTreeData } from '@/hooks/use-families';
 import { generateGedcom, validateGedcom, downloadGedcom } from '@/lib/gedcom-export';
-import { Download, FileText, BookOpen, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Download, BookOpen, Loader2, CheckCircle2, AlertTriangle, Archive } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function DocumentsPage() {
@@ -135,23 +135,30 @@ export default function DocumentsPage() {
           </CardContent>
         </Card>
 
-        {/* Future: Document Storage */}
-        <Card className="opacity-60">
+        {/* Document Library */}
+        <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-50">
-                <FileText className="h-5 w-5 text-gray-400" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50">
+                <Archive className="h-5 w-5 text-amber-600" />
               </div>
               <div>
                 <CardTitle>Kho tài liệu</CardTitle>
-                <CardDescription>Sắp ra mắt</CardDescription>
+                <CardDescription>Lưu trữ ảnh lịch sử, giấy tờ, bản đồ, video</CardDescription>
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Lưu trữ tài liệu, hình ảnh lịch sử và gia phả giấy đã số hóa.
+              Kho lưu giữ ký ức dòng họ: ảnh cũ, gia phả giấy đã số hóa, bản đồ làng,
+              video lễ hội, bài viết lịch sử.
             </p>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/documents/library">
+                <Archive className="h-4 w-4 mr-2" />
+                Xem Kho tài liệu
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </div>

@@ -29,7 +29,7 @@ Sprint 10 ███████████████████████�
 
 --- Future (community contribution / owner has time) ---
 
-Sprint 11 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ v2.2.0 Kho tài liệu     📋 PLANNED
+Sprint 11 ████████████████████████████████ v2.2.0 Kho tài liệu     ✅ DONE
 Sprint 12 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ v2.3.0 Góc giao lưu     📋 PLANNED
 Sprint 13 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ v2.4.0 Thông báo        📋 PLANNED
 Sprint 14 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ v2.5.0 Export/Import    📋 PLANNED
@@ -46,7 +46,8 @@ Milestones:
 ├── v1.5.0 Relations→ End Sprint 7.5  ✅
 ├── v1.7.0 LocalDev+Security → End Sprint 8 ✅
 ├── v2.0.0 Desktop  → End Sprint 9    ✅ (Phase 1-3)
-└── v2.1.0 Landing  → End Sprint 10   🔄 In Progress
+├── v2.1.0 Landing  → End Sprint 10   ✅
+└── v2.2.0 KhoTaiLieu→ End Sprint 11  ✅
 ```
 
 ---
@@ -1167,22 +1168,22 @@ frontend/
 
 ### Tasks
 
-| # | Task | Est. | Owner |
-| --- | --- | --- | --- |
-| S11-01 | DB: Bảng `documents` (title, category, description, file_url, file_size, uploaded_by, tags, person_ids, is_public) + RLS policies | 30m | @dev |
-| S11-02 | Types: `Document`, `DocumentCategory` interfaces in `types/index.ts` | 15m | @dev |
-| S11-03 | Data layer: `supabase-data-documents.ts` — CRUD + search + filter by category | 45m | @dev |
-| S11-04 | Hooks: `use-documents.ts` — React Query hooks | 30m | @dev |
-| S11-05 | Storage: Supabase bucket `documents/` config, upload helper | 30m | @dev |
-| S11-06 | Public page: `/documents` gallery view (grid/list) + filter + search | 60m | @dev |
-| S11-07 | Admin page: `/admin/documents` — CRUD + approve uploads | 45m | @dev |
-| S11-08 | Sidebar: Add "Kho tài liệu" nav item | 5m | @dev |
-| S11-09 | Desktop: SQLite table + migration + shim support | 30m | @dev |
-| S11-10 | Build & verify (Kho tài liệu) | 15m | @dev |
-| S11-11 | In-App Help Page: `/help` — Hướng dẫn sử dụng chi tiết (5 sections: điều hướng, workflow, phân quyền, mẹo, FAQ) + Desktop conditional sections | 60m | @dev |
-| S11-12 | Sidebar: Add "Hướng dẫn" nav item (HelpCircle icon) | 5m | @dev |
-| S11-13 | Middleware: Add `/help` to authRequiredPaths | 5m | @dev |
-| S11-14 | Build & verify (Help page) | 10m | @dev |
+| # | Task | Est. | Owner | Status |
+| --- | --- | --- | --- | --- |
+| S11-01 | DB: Bảng `clan_documents` + RLS policies | 30m | @dev | ✅ |
+| S11-02 | Types: `ClanDocument`, `DocumentCategory` interfaces in `types/index.ts` | 15m | @dev | ✅ |
+| S11-03 | Data layer: `supabase-data-documents.ts` — CRUD + search + filter by category | 45m | @dev | ✅ |
+| S11-04 | Hooks: `use-documents.ts` — React Query hooks | 30m | @dev | ✅ |
+| S11-05 | Storage: File upload helper (Supabase + Desktop mode) | 30m | @dev | ✅ |
+| S11-06 | Public page: `/documents/library` gallery view + category filter + search | 60m | @dev | ✅ |
+| S11-07 | Admin page: `/admin/documents` — CRUD + file upload + delete confirmation | 45m | @dev | ✅ |
+| S11-08 | Sidebar: "QL Tài liệu" admin nav item | 5m | @dev | ✅ |
+| S11-09 | Desktop: SQLite table `003-clan-documents.sql` + shim support | 30m | @dev | ✅ |
+| S11-10 | Build & verify (Kho tài liệu) — 36 routes, 0 errors | 15m | @dev | ✅ |
+| S11-11 | In-App Help Page: `/help` — 5 sections + Desktop conditional | 60m | @dev | ✅ |
+| S11-12 | Sidebar: Add "Hướng dẫn" nav item (HelpCircle icon) | 5m | @dev | ✅ |
+| S11-13 | Middleware: Add `/help` to authRequiredPaths | 5m | @dev | ✅ |
+| S11-14 | Build & verify (Help page) | 10m | @dev | ✅ |
 
 ### Categories
 
@@ -1199,15 +1200,15 @@ frontend/
 
 | ID | Criteria | Status |
 | --- | --- | --- |
-| AC-S11-01 | `/help` page renders 5 sections (điều hướng, workflow, phân quyền, mẹo, FAQ) | ⏳ |
-| AC-S11-02 | Desktop mode shows backup guide + Desktop vs Web table | ⏳ |
-| AC-S11-03 | Sidebar shows "Hướng dẫn" with HelpCircle icon | ⏳ |
-| AC-S11-04 | Unauthenticated → `/help` redirects to `/welcome` | ⏳ |
-| AC-S11-05 | Upload tài liệu (ảnh, PDF) hoạt động | ⏳ |
-| AC-S11-06 | Gallery view với filter theo category | ⏳ |
-| AC-S11-07 | Admin CRUD + approve uploads | ⏳ |
-| AC-S11-08 | Desktop mode hỗ trợ đầy đủ (Kho tài liệu) | ⏳ |
-| AC-S11-09 | `pnpm build` passes | ⏳ |
+| AC-S11-01 | `/help` page renders 5 sections (điều hướng, workflow, phân quyền, mẹo, FAQ) | ✅ |
+| AC-S11-02 | Desktop mode shows backup guide + Desktop vs Web table | ✅ |
+| AC-S11-03 | Sidebar shows "Hướng dẫn" with HelpCircle icon | ✅ |
+| AC-S11-04 | Unauthenticated → `/help` redirects to `/welcome` | ✅ |
+| AC-S11-05 | Upload tài liệu (ảnh, PDF) hoạt động | ✅ |
+| AC-S11-06 | Gallery view với filter theo category | ✅ |
+| AC-S11-07 | Admin CRUD + file upload + delete confirmation | ✅ |
+| AC-S11-08 | Desktop mode hỗ trợ đầy đủ (Kho tài liệu) | ✅ |
+| AC-S11-09 | `pnpm build` passes (36 routes, 0 errors) | ✅ |
 
 ---
 

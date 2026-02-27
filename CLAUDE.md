@@ -2,8 +2,8 @@
 project: AncestorTree
 path: CLAUDE.md
 type: agent-guidelines
-version: 2.1.0
-updated: 2026-02-26
+version: 2.2.0
+updated: 2026-02-27
 ---
 
 # CLAUDE.md
@@ -15,7 +15,7 @@ This file provides guidance to AI assistants (Claude, GPT, etc.) when working wi
 **AncestorTree** (Gia Phả Điện Tử) is a digital family tree management system for Chi tộc Đặng Đình, Thạch Lâm, Hà Tĩnh.
 
 - **Repository:** https://github.com/Minh-Tam-Solution/AncestorTree
-- **Current Version:** v2.1.0 (Sprint 10 — Landing Page + Desktop App)
+- **Current Version:** v2.2.0 (Sprint 11 — Kho tài liệu + In-App Help)
 - **SDLC Tier:** LITE (5 stages)
 - **Tech Stack:** Next.js 16, React 19, Tailwind CSS 4, Supabase, Electron 34 (desktop)
 - **Built with:** [TinySDLC](https://github.com/Minh-Tam-Solution/tinysdlc) + [MTS-SDLC-Lite](https://github.com/Minh-Tam-Solution/MTS-SDLC-Lite)
@@ -86,6 +86,7 @@ AncestorTree/
 │   │       ├── contributions/      # Đóng góp (Sprint 4)
 │   │       ├── directory/          # Thư mục thành viên (Sprint 4)
 │   │       ├── documents/book/     # Gia phả sách (Sprint 5)
+│   │       ├── documents/library/ # Kho tài liệu (Sprint 11)
 │   │       ├── events/             # Lịch sự kiện (Sprint 4)
 │   │       ├── fund/               # Quỹ khuyến học (Sprint 6)
 │   │       ├── help/               # Hướng dẫn sử dụng (Sprint 11)
@@ -96,6 +97,7 @@ AncestorTree/
 │   │           ├── cau-duong/      # QL Cầu đường (Sprint 7)
 │   │           ├── charter/        # QL Hương ước (Sprint 6)
 │   │           ├── contributions/  # QL Đóng góp (Sprint 4)
+│   │           ├── documents/      # QL Tài liệu (Sprint 11)
 │   │           ├── fund/           # QL Quỹ & Học bổng (Sprint 6)
 │   │           ├── settings/       # Cài đặt
 │   │           └── users/          # QL Người dùng
@@ -111,6 +113,7 @@ AncestorTree/
 │   │   ├── use-contributions.ts    # Contribution hooks (Sprint 4)
 │   │   ├── use-events.ts           # Event hooks (Sprint 4)
 │   │   ├── use-families.ts         # Family relations hooks (Sprint 7.5)
+│   │   ├── use-documents.ts        # Document CRUD hooks (Sprint 11)
 │   │   └── use-fund.ts             # Fund & scholarship hooks (Sprint 6)
 │   ├── src/lib/                    # Utilities, Supabase client
 │   │   ├── supabase.ts             # Supabase client init
@@ -118,12 +121,13 @@ AncestorTree/
 │   │   ├── supabase-data-achievements.ts  # Achievement data (Sprint 6)
 │   │   ├── supabase-data-cau-duong.ts     # Cầu đường + DFS algorithm (Sprint 7)
 │   │   ├── supabase-data-charter.ts       # Charter data (Sprint 6)
+│   │   ├── supabase-data-documents.ts     # Document data (Sprint 11)
 │   │   ├── supabase-data-fund.ts          # Fund & scholarship data (Sprint 6)
 │   │   └── lunar-calendar.ts       # Lunar-solar conversion (Sprint 4)
 │   ├── src/types/                  # TypeScript types
 │   │   └── index.ts                # All type definitions
 │   └── supabase/                   # Database migrations
-│       ├── migrations/             # Timestamped migration files (6)
+│       ├── migrations/             # Timestamped migration files (7)
 │       ├── config.toml             # Supabase CLI config (ports, storage)
 │       └── seed.sql                # Demo data: 18 thành viên 5 đời
 ├── desktop/                        # Electron desktop app (Sprint 9)
@@ -151,7 +155,7 @@ AncestorTree/
 
 ## Database Schema
 
-13 tables across 4 layers:
+14 tables across 5 layers:
 
 | Layer | Tables | Migration File |
 |-------|--------|----------------|
@@ -159,6 +163,7 @@ AncestorTree/
 | **Platform** | `profiles`, `contributions`, `media`, `events` | `database-setup.sql` |
 | **Culture (v1.3)** | `achievements`, `fund_transactions`, `scholarships`, `clan_articles` | `sprint6-migration.sql` |
 | **Ceremony (v1.4)** | `cau_duong_pools`, `cau_duong_assignments` | `cau-duong-migration.sql` |
+| **Documents (v2.2)** | `clan_documents` | `sprint11-kho-tai-lieu.sql` |
 
 All tables have RLS policies with 4 roles: `admin`, `editor`, `viewer`, `guest`.
 
@@ -272,6 +277,7 @@ chore/upgrade-deps
 | Sprint 6 Migration | `frontend/supabase/migrations/20260224000001_sprint6_migration.sql` |
 | Sprint 7 Migration | `frontend/supabase/migrations/20260224000002_cau_duong_migration.sql` |
 | Security Migration | `frontend/supabase/migrations/20260226000005_security_hardening.sql` |
+| Sprint 11 Migration | `frontend/supabase/migrations/20260227000006_sprint11_kho_tai_lieu.sql` |
 | Local Dev Guide | `docs/04-build/LOCAL-DEVELOPMENT.md` |
 | Sprint Plan | `docs/04-build/SPRINT-PLAN.md` |
 | Test Plan | `docs/05-test/TEST-PLAN.md` |
@@ -284,6 +290,9 @@ chore/upgrade-deps
 | Installation Guide | `docs/04-build/INSTALLATION-GUIDE.md` |
 | User Guide | `docs/04-build/USER-GUIDE.md` |
 | Landing Page | `frontend/src/app/(landing)/welcome/page.tsx` |
+| Help Page | `frontend/src/app/(main)/help/page.tsx` |
+| Document Library | `frontend/src/app/(main)/documents/library/page.tsx` |
+| Admin Documents | `frontend/src/app/(main)/admin/documents/page.tsx` |
 
 ## Common Tasks
 
