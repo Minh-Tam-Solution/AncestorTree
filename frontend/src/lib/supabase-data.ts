@@ -499,6 +499,45 @@ export async function checkPersonInSubtree(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// Verification & Sub-admin (Sprint 12)
+// ═══════════════════════════════════════════════════════════════════════════
+
+export async function verifyUser(userId: string, verified: boolean): Promise<Profile> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ is_verified: verified, updated_at: new Date().toISOString() })
+    .eq('user_id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function updateCanVerifyMembers(userId: string, canVerify: boolean): Promise<Profile> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ can_verify_members: canVerify, updated_at: new Date().toISOString() })
+    .eq('user_id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getUnverifiedProfiles(): Promise<Profile[]> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('is_verified', false)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // Statistics
 // ═══════════════════════════════════════════════════════════════════════════
 

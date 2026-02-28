@@ -16,6 +16,9 @@ import {
   updateUserRole,
   updateLinkedPerson,
   updateEditRootPerson,
+  verifyUser,
+  updateCanVerifyMembers,
+  getUnverifiedProfiles,
 } from '@/lib/supabase-data';
 import type { Profile, UserRole } from '@/types';
 
@@ -23,6 +26,7 @@ import type { Profile, UserRole } from '@/types';
 export const profileKeys = {
   all: ['profiles'] as const,
   lists: () => [...profileKeys.all, 'list'] as const,
+  unverified: () => [...profileKeys.all, 'unverified'] as const,
   details: () => [...profileKeys.all, 'detail'] as const,
   detail: (id: string) => [...profileKeys.details(), id] as const,
 };
@@ -91,6 +95,39 @@ export function useUpdateEditRootPerson() {
   return useMutation({
     mutationFn: ({ userId, personId }: { userId: string; personId: string | null }) =>
       updateEditRootPerson(userId, personId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKeys.all });
+    },
+  });
+}
+
+// ─── Sprint 12: Verification ─────────────────────────────────────────────────
+
+export function useUnverifiedProfiles() {
+  return useQuery({
+    queryKey: profileKeys.unverified(),
+    queryFn: getUnverifiedProfiles,
+  });
+}
+
+export function useVerifyUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ userId, verified }: { userId: string; verified: boolean }) =>
+      verifyUser(userId, verified),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKeys.all });
+    },
+  });
+}
+
+export function useUpdateCanVerifyMembers() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ userId, canVerify }: { userId: string; canVerify: boolean }) =>
+      updateCanVerifyMembers(userId, canVerify),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: profileKeys.all });
     },

@@ -104,6 +104,10 @@ export interface Profile {
   /** FK → people.id: subtree root this user can edit (null = global editor) */
   edit_root_person_id?: string;
   avatar_url?: string;
+  /** Whether admin has verified this user account */
+  is_verified: boolean;
+  /** Whether this editor can verify members in their subtree */
+  can_verify_members: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -309,6 +313,8 @@ export interface ClanDocument {
   tags?: string;
   person_id?: string;
   uploaded_by?: string;
+  /** 0=public, 1=members only, 2=admin only */
+  privacy_level: number;
   created_at: string;
   updated_at: string;
 }

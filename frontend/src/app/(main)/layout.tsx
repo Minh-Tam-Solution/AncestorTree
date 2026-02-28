@@ -1,14 +1,15 @@
 /**
  * @project AncestorTree
  * @file src/app/(main)/layout.tsx
- * @description Main app layout with sidebar navigation
- * @version 1.0.0
- * @updated 2026-02-24
+ * @description Main app layout with sidebar navigation + verification guard
+ * @version 1.1.0
+ * @updated 2026-02-28
  */
 
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { Separator } from '@/components/ui/separator';
+import { VerificationGuard } from '@/components/auth/verification-guard';
 
 export default function MainLayout({
   children,
@@ -25,7 +26,9 @@ export default function MainLayout({
           <div className="flex-1" />
         </header>
         <main className="flex-1 overflow-auto">
-          {children}
+          <VerificationGuard>
+            {children}
+          </VerificationGuard>
         </main>
       </SidebarInset>
     </SidebarProvider>

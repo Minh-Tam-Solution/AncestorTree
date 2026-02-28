@@ -2,8 +2,8 @@
 project: AncestorTree
 path: docs/04-build/SPRINT-PLAN.md
 type: build
-version: 3.0.0
-updated: 2026-02-27
+version: 3.1.0
+updated: 2026-02-28
 owner: "@pm"
 status: approved
 ---
@@ -30,10 +30,11 @@ Sprint 10 ███████████████████████�
 --- Future (community contribution / owner has time) ---
 
 Sprint 11 ████████████████████████████████ v2.2.0 Kho tài liệu     ✅ DONE
-Sprint 12 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ v2.3.0 Góc giao lưu     📋 PLANNED
-Sprint 13 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ v2.4.0 Thông báo        📋 PLANNED
-Sprint 14 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ v2.5.0 Export/Import    📋 PLANNED
-Sprint 15 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ v3.0.0 Nhà thờ họ       📋 PLANNED
+Sprint 12 ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ v2.3.0 Bảo mật & Xác nhận 🚧 IN PROGRESS
+Sprint 13 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ v2.4.0 Góc giao lưu     📋 PLANNED
+Sprint 14 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ v2.5.0 Thông báo        📋 PLANNED
+Sprint 15 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ v2.6.0 Export/Import    📋 PLANNED
+Sprint 16 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ v3.0.0 Nhà thờ họ       📋 PLANNED
 
 Milestones:
 ├── v0.1.0 Alpha    → End Sprint 1    ✅
@@ -47,7 +48,8 @@ Milestones:
 ├── v1.7.0 LocalDev+Security → End Sprint 8 ✅
 ├── v2.0.0 Desktop  → End Sprint 9    ✅ (Phase 1-3)
 ├── v2.1.0 Landing  → End Sprint 10   ✅
-└── v2.2.0 KhoTaiLieu→ End Sprint 11  ✅
+├── v2.2.0 KhoTaiLieu→ End Sprint 11  ✅
+└── v2.3.0 Privacy+Verify → Sprint 12  🚧
 ```
 
 ---
@@ -1212,11 +1214,60 @@ frontend/
 
 ---
 
-## Sprint 12 — Góc giao lưu (v2.3.0) 📋
+## Sprint 12 — Bảo mật & Xác nhận thành viên (v2.3.0) 🚧
+
+**Status:** IN PROGRESS
+**Goal:** Tăng cường bảo mật thông tin cá nhân, xác nhận email & thành viên, sub-admin
+**Ước lượng:** ~2-3 ngày
+**Spec:** [SPRINT-12-SPEC.md](./SPRINT-12-SPEC.md)
+
+> 💡 **Từ phản hồi cộng đồng:** Cần bảo mật thông tin cá nhân thành viên hơn —
+> viewer chỉ nên thấy thông tin công khai, đăng ký cần xác nhận email + admin duyệt.
+
+### Tasks
+
+| # | Task | Est. | Owner |
+| --- | --- | --- | --- |
+| S12-01 | Migration SQL: profiles (is_verified, can_verify_members) + documents (privacy_level) + RLS | 30m | @coder |
+| S12-02 | Supabase config: enable email confirmations | 5m | @coder |
+| S12-03 | Fix person form privacy default (0→1) | 5m | @coder |
+| S12-04 | Types: Profile + ClanDocument new fields | 10m | @coder |
+| S12-05 | Data layer: verify/unverified functions | 20m | @coder |
+| S12-06 | Auth provider: isVerified context | 10m | @coder |
+| S12-07 | Hooks: verification hooks (useVerifyUser, useUnverifiedProfiles) | 15m | @coder |
+| S12-08 | Middleware: is_verified check + /pending-verification page | 30m | @coder |
+| S12-09 | Sidebar: hide "Danh bạ" for viewer | 10m | @coder |
+| S12-10 | People list: hide "Thêm mới" for viewer | 5m | @coder |
+| S12-11 | Person detail: useCanEditPerson + hide contacts for viewer | 20m | @coder |
+| S12-12 | Directory: mask zalo/facebook + viewer restrictions | 15m | @coder |
+| S12-13 | Admin Users: verification controls + sub-admin | 60m | @coder |
+| S12-14 | Admin Documents: privacy selector | 15m | @coder |
+| S12-15 | Document Library: privacy badge | 10m | @coder |
+| S12-16 | Register: email verification success card | 15m | @coder |
+
+### Acceptance Criteria
+
+| ID | Criteria | Status |
+| --- | --- | --- |
+| AC-S12-01 | Đăng ký → email xác nhận (Supabase native) | ⏳ |
+| AC-S12-02 | Login khi is_verified=false → redirect /pending-verification | ⏳ |
+| AC-S12-03 | Admin → /admin/users → "Chờ duyệt" badge + nút "Xác nhận" | ⏳ |
+| AC-S12-04 | Viewer sidebar: không thấy "Danh bạ" | ⏳ |
+| AC-S12-05 | Viewer → /people/:id → không thấy card liên hệ | ⏳ |
+| AC-S12-06 | Viewer → /directory → contacts masked (kể cả zalo/facebook) | ⏳ |
+| AC-S12-07 | Upload tài liệu với privacy_level → viewer chỉ thấy public+members | ⏳ |
+| AC-S12-08 | Sub-admin (editor+can_verify) chỉ verify users trong subtree | ⏳ |
+| AC-S12-09 | Person detail uses useCanEditPerson hook (branch-aware) | ⏳ |
+| AC-S12-10 | Desktop mode hoạt động bình thường (auto-verified) | ⏳ |
+| AC-S12-11 | `pnpm build` passes | ⏳ |
+
+---
+
+## Sprint 13 — Góc giao lưu (v2.4.0) 📋
 
 **Status:** Planned — community contribution hoặc owner implement khi có thời gian
 **Goal:** Không gian chia sẻ cho người trẻ + Việt kiều — gửi ảnh quê, giao lưu
-**Ước lượng:** ~6-8 giờ (phức tạp hơn — multi-image, realtime optional)
+**Ước lượng:** ~6-8 giờ
 
 > 💡 **Từ phản hồi người dùng:** "Người trẻ cũng nhiều, đi khắp trong nước, có cả nước ngoài.
 > Có box giao lưu thi thoảng gửi cái ảnh ở quê cho người xa nhà."
@@ -1225,74 +1276,57 @@ frontend/
 
 | # | Task | Est. | Owner |
 | --- | --- | --- | --- |
-| S12-01 | DB: Bảng `posts` (author_id, content, images[], created_at) + RLS | 30m | @dev |
-| S12-02 | DB: Bảng `post_comments` (post_id, author_id, content, created_at) | 15m | @dev |
-| S12-03 | DB: Bảng `post_reactions` (post_id, user_id, type) + unique constraint | 15m | @dev |
-| S12-04 | Types: `Post`, `PostComment`, `PostReaction` interfaces | 15m | @dev |
-| S12-05 | Data layer: `supabase-data-feed.ts` — posts CRUD + comments + reactions | 60m | @dev |
-| S12-06 | Hooks: `use-feed.ts` — React Query + optimistic updates | 45m | @dev |
-| S12-07 | Feed page: `/feed` — timeline, create post, multi-image upload | 90m | @dev |
-| S12-08 | Comments: Inline comment list + add comment form | 45m | @dev |
-| S12-09 | Reactions: Heart/like button with count | 15m | @dev |
-| S12-10 | Admin: Moderation — ẩn/xóa bài không phù hợp | 30m | @dev |
-| S12-11 | Sidebar: Add "Góc giao lưu" nav item | 5m | @dev |
-| S12-12 | Desktop: SQLite tables + migrations + shim | 30m | @dev |
-| S12-13 | Build & verify | 15m | @dev |
-
-### Acceptance Criteria
-
-| ID | Criteria | Status |
-| --- | --- | --- |
-| AC-S12-01 | Đăng bài + ảnh (multi-image) hoạt động | ⏳ |
-| AC-S12-02 | Comment dưới bài viết | ⏳ |
-| AC-S12-03 | Like/react bài viết | ⏳ |
-| AC-S12-04 | Feed timeline sorted by newest | ⏳ |
-| AC-S12-05 | Admin moderation (ẩn/xóa) | ⏳ |
-| AC-S12-06 | Desktop mode hỗ trợ đầy đủ | ⏳ |
-| AC-S12-07 | `pnpm build` passes | ⏳ |
+| S13-01 | DB: Bảng `posts` (author_id, content, images[], created_at) + RLS | 30m | @dev |
+| S13-02 | DB: Bảng `post_comments` + `post_reactions` | 30m | @dev |
+| S13-03 | Types + Data layer + Hooks | 60m | @dev |
+| S13-04 | Feed page: `/feed` — timeline, create post, multi-image upload | 90m | @dev |
+| S13-05 | Comments + Reactions UI | 60m | @dev |
+| S13-06 | Admin: Moderation — ẩn/xóa bài không phù hợp | 30m | @dev |
+| S13-07 | Desktop: SQLite tables + migrations | 30m | @dev |
+| S13-08 | Build & verify | 15m | @dev |
 
 ---
 
-## Sprint 13 — Thông báo & Nhắc nhở (v2.4.0) 📋
+## Sprint 14 — Thông báo & Nhắc nhở (v2.5.0) 📋
 
 **Status:** Planned
 **Goal:** Email nhắc ngày giỗ, thông báo sự kiện mới
-**Ước lượng:** ~4-6 giờ
-
-### S13 Tasks
-
-| # | Task | Est. | Owner |
-| --- | --- | --- | --- |
-| S13-01 | Email service: Supabase Edge Function + Resend/SendGrid | 60m | @dev |
-| S13-02 | DB: Bảng `notification_preferences` (user_id, type, enabled) | 15m | @dev |
-| S13-03 | Giỗ reminders: Cron job gửi email 3 ngày trước ngày giỗ | 60m | @dev |
-| S13-04 | Event alerts: Thông báo sự kiện mới, bài viết mới | 30m | @dev |
-| S13-05 | Preferences page: UI cài đặt on/off per notification type | 30m | @dev |
-| S13-06 | In-app notifications: Bell icon + dropdown (optional) | 45m | @dev |
-| S13-07 | Build & verify | 15m | @dev |
-
----
-
-## Sprint 14 — Export/Import & Đồng bộ (v2.5.0) 📋
-
-**Status:** Planned
-**Goal:** Chuyển dữ liệu Desktop ↔ Web, GEDCOM import, CSV export
 **Ước lượng:** ~4-6 giờ
 
 ### S14 Tasks
 
 | # | Task | Est. | Owner |
 | --- | --- | --- | --- |
-| S14-01 | ZIP export: DB + media → .zip file (Desktop) | 60m | @dev |
-| S14-02 | ZIP import: Restore từ .zip file | 60m | @dev |
-| S14-03 | GEDCOM import: Parse .ged → tạo people + families | 90m | @dev |
-| S14-04 | CSV export: Danh sách thành viên → Excel/CSV | 30m | @dev |
-| S14-05 | Desktop → Web sync: Guide + migration script | 30m | @dev |
-| S14-06 | Build & verify | 15m | @dev |
+| S14-01 | Email service: Supabase Edge Function + Resend/SendGrid | 60m | @dev |
+| S14-02 | DB: Bảng `notification_preferences` (user_id, type, enabled) | 15m | @dev |
+| S14-03 | Giỗ reminders: Cron job gửi email 3 ngày trước ngày giỗ | 60m | @dev |
+| S14-04 | Event alerts: Thông báo sự kiện mới, bài viết mới | 30m | @dev |
+| S14-05 | Preferences page: UI cài đặt on/off per notification type | 30m | @dev |
+| S14-06 | In-app notifications: Bell icon + dropdown (optional) | 45m | @dev |
+| S14-07 | Build & verify | 15m | @dev |
 
 ---
 
-## Sprint 15+ — Nhà thờ họ & Cộng đồng (v3.0.0) 📋
+## Sprint 15 — Export/Import & Đồng bộ (v2.6.0) 📋
+
+**Status:** Planned
+**Goal:** Chuyển dữ liệu Desktop ↔ Web, GEDCOM import, CSV export
+**Ước lượng:** ~4-6 giờ
+
+### S15 Tasks
+
+| # | Task | Est. | Owner |
+| --- | --- | --- | --- |
+| S15-01 | ZIP export: DB + media → .zip file (Desktop) | 60m | @dev |
+| S15-02 | ZIP import: Restore từ .zip file | 60m | @dev |
+| S15-03 | GEDCOM import: Parse .ged → tạo people + families | 90m | @dev |
+| S15-04 | CSV export: Danh sách thành viên → Excel/CSV | 30m | @dev |
+| S15-05 | Desktop → Web sync: Guide + migration script | 30m | @dev |
+| S15-06 | Build & verify | 15m | @dev |
+
+---
+
+## Sprint 16+ — Nhà thờ họ & Cộng đồng (v3.0.0) 📋
 
 **Status:** Future — Q2-Q3 2026
 **Goal:** Mở rộng cho cộng đồng rộng hơn

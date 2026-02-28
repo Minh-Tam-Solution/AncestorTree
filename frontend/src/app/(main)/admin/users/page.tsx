@@ -1,15 +1,15 @@
 /**
  * @project AncestorTree
  * @file src/app/(main)/admin/users/page.tsx
- * @description User management page — role + tree mapping (FR-507~509)
- * @version 3.0.0
- * @updated 2026-02-25
+ * @description User management page — role + tree mapping + verification (FR-507~509, Sprint 12)
+ * @version 4.0.0
+ * @updated 2026-02-28
  */
 
 'use client';
 
-import { useState } from 'react';
-import { useProfiles, useUpdateUserRole, useUpdateLinkedPerson, useUpdateEditRootPerson } from '@/hooks/use-profiles';
+import { useState, useMemo } from 'react';
+import { useProfiles, useUpdateUserRole, useUpdateLinkedPerson, useUpdateEditRootPerson, useVerifyUser, useUpdateCanVerifyMembers } from '@/hooks/use-profiles';
 import { useSearchPeople, usePerson } from '@/hooks/use-people';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -62,6 +62,8 @@ import {
   Search,
   X,
   GitBranch,
+  Clock,
+  ShieldCheck,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -209,8 +211,11 @@ function TreeMappingDialog({ user, open, onOpenChange }: TreeMappingDialogProps)
   const [editRootPerson, setEditRootPerson] = useState<Person | null>(null);
   const [initialized, setInitialized] = useState(false);
 
-  // Initialise selections from current profile values when dialog opens
-  if (open && !initialized && (initialLinked !== undefined || !user.linked_person)) {
+  // Initialise selections from current profile values when dialog opens (ISS-09)
+  // Wait for BOTH queries to resolve before initializing
+  const linkedReady = initialLinked !== undefined || !user.linked_person;
+  const editRootReady = initialEditRoot !== undefined || !user.edit_root_person_id;
+  if (open && !initialized && linkedReady && editRootReady) {
     setLinkedPerson(initialLinked ?? null);
     setEditRootPerson(initialEditRoot ?? null);
     setInitialized(true);
@@ -307,6 +312,9 @@ function TreeMappingDialog({ user, open, onOpenChange }: TreeMappingDialogProps)
 export default function UsersPage() {
   const { data: profiles, isLoading, error } = useProfiles();
   const updateRole = useUpdateUserRole();
+  const verifyMutation = useVerifyUser();
+  const updateCanVerifyMutation = useUpdateCanVerifyMembers();
+  const [showUnverifiedOnly, setShowUnverifiedOnly] = useState(false);
 
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -317,6 +325,31 @@ export default function UsersPage() {
   } | null>(null);
 
   const [mappingUser, setMappingUser] = useState<Profile | null>(null);
+
+  const unverifiedCount = profiles?.filter(p => !p.is_verified).length || 0;
+  const displayedProfiles = useMemo(() => {
+    if (!profiles) return [];
+    if (showUnverifiedOnly) return profiles.filter(p => !p.is_verified);
+    return profiles;
+  }, [profiles, showUnverifiedOnly]);
+
+  const handleVerify = async (userId: string, userName: string) => {
+    try {
+      await verifyMutation.mutateAsync({ userId, verified: true });
+      toast.success(`Đã xác nhận tài khoản ${userName}`);
+    } catch {
+      toast.error('Lỗi khi xác nhận tài khoản');
+    }
+  };
+
+  const handleToggleCanVerify = async (userId: string, canVerify: boolean, userName: string) => {
+    try {
+      await updateCanVerifyMutation.mutateAsync({ userId, canVerify });
+      toast.success(`${userName}: ${canVerify ? 'Đã bật' : 'Đã tắt'} quyền xác nhận TV`);
+    } catch {
+      toast.error('Lỗi khi cập nhật quyền');
+    }
+  };
 
   const handleRoleChange = (userId: string, newRole: UserRole, currentRole: UserRole, userName: string) => {
     if (newRole === currentRole) return;
@@ -389,7 +422,21 @@ export default function UsersPage() {
           </CardTitle>
           <CardDescription>
             {isLoading ? 'Đang tải...' : `${profiles?.length || 0} người dùng đã đăng ký`}
+            {unverifiedCount > 0 && !isLoading && (
+              <span className="ml-2 text-amber-600">({unverifiedCount} chờ xác nhận)</span>
+            )}
           </CardDescription>
+          {unverifiedCount > 0 && (
+            <Button
+              variant={showUnverifiedOnly ? 'default' : 'outline'}
+              size="sm"
+              className="w-fit"
+              onClick={() => setShowUnverifiedOnly(!showUnverifiedOnly)}
+            >
+              <Clock className="h-3.5 w-3.5 mr-1.5" />
+              {showUnverifiedOnly ? 'Hiện tất cả' : `Chờ xác nhận (${unverifiedCount})`}
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -412,20 +459,21 @@ export default function UsersPage() {
                 Thử lại
               </Button>
             </div>
-          ) : profiles && profiles.length > 0 ? (
+          ) : displayedProfiles.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Người dùng</TableHead>
                   <TableHead className="hidden sm:table-cell">Email</TableHead>
                   <TableHead>Vai trò</TableHead>
+                  <TableHead>Trạng thái</TableHead>
                   <TableHead className="hidden lg:table-cell">Cây gia phả</TableHead>
                   <TableHead className="hidden md:table-cell">Ngày tạo</TableHead>
                   <TableHead className="text-right">Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {profiles.map((user) => (
+                {displayedProfiles.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
@@ -446,6 +494,19 @@ export default function UsersPage() {
                       <Badge className={roleLabels[user.role].color}>
                         {roleLabels[user.role].label}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {user.is_verified ? (
+                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Đã xác nhận
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-amber-600 border-amber-300">
+                          <Clock className="h-3 w-3 mr-1" />
+                          Chờ duyệt
+                        </Badge>
+                      )}
                     </TableCell>
                     {/* Tree mapping column */}
                     <TableCell className="hidden lg:table-cell">
@@ -469,6 +530,32 @@ export default function UsersPage() {
                     <TableCell className="hidden md:table-cell">{formatDate(user.created_at)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
+                        {/* Verify button */}
+                        {!user.is_verified && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-2 text-green-600 border-green-300 hover:bg-green-50"
+                            onClick={() => handleVerify(user.user_id, user.full_name || user.email)}
+                            disabled={verifyMutation.isPending}
+                            title="Xác nhận tài khoản"
+                          >
+                            <ShieldCheck className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                        {/* Can verify members toggle (editors only) */}
+                        {user.role === 'editor' && user.is_verified && (
+                          <Button
+                            variant={user.can_verify_members ? 'default' : 'outline'}
+                            size="sm"
+                            className="h-8 px-2"
+                            onClick={() => handleToggleCanVerify(user.user_id, !user.can_verify_members, user.full_name || user.email)}
+                            disabled={updateCanVerifyMutation.isPending}
+                            title={user.can_verify_members ? 'Tắt quyền xác nhận TV' : 'Bật quyền xác nhận TV'}
+                          >
+                            <ShieldCheck className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                         {/* Tree mapping button */}
                         <Button
                           variant="outline"

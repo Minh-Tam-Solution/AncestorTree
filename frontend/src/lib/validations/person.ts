@@ -96,5 +96,5 @@ export const defaultPersonValues: PersonFormData = {
   biography: '',
   notes: '',
   avatar_url: '',
-  privacy_level: 0,
+  privacy_level: 1,
 };

@@ -11,6 +11,7 @@
 import { use } from 'react';
 import { usePerson, useDeletePerson } from '@/hooks/use-people';
 import { useAuth } from '@/components/auth/auth-provider';
+import { useCanEditPerson } from '@/hooks/use-can-edit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AvatarUpload } from '@/components/people/avatar-upload';
@@ -56,8 +57,10 @@ export default function PersonDetailPage({ params }: PageProps) {
   const router = useRouter();
   const { data: person, isLoading, error } = usePerson(id);
   const deleteMutation = useDeletePerson();
-  const { isAdmin, profile } = useAuth();
-  const canEdit = isAdmin || profile?.role === 'editor';
+  const { profile } = useAuth();
+  const { data: canEdit = false } = useCanEditPerson(id);
+  const isViewer = profile?.role === 'viewer';
+  const isSelf = profile?.linked_person === id;
 
   const handleDelete = async () => {
     try {
@@ -254,53 +257,55 @@ export default function PersonDetailPage({ params }: PageProps) {
           </CardContent>
         </Card>
 
-        {/* Contact Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Liên hệ</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {person.phone && (
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                <a href={`tel:${person.phone}`} className="text-primary hover:underline">
-                  {person.phone}
-                </a>
-              </div>
-            )}
-            {person.email && (
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <a href={`mailto:${person.email}`} className="text-primary hover:underline">
-                  {person.email}
-                </a>
-              </div>
-            )}
-            {person.zalo && (
-              <div className="flex items-center gap-2">
-                <MessageCircle className="h-4 w-4 text-muted-foreground" />
-                <span>Zalo: {person.zalo}</span>
-              </div>
-            )}
-            {person.facebook && (
-              <div className="flex items-center gap-2">
-                <Facebook className="h-4 w-4 text-muted-foreground" />
-                <a href={person.facebook} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                  Facebook
-                </a>
-              </div>
-            )}
-            {person.address && (
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span>{person.address}</span>
-              </div>
-            )}
-            {!person.phone && !person.email && !person.zalo && !person.facebook && !person.address && (
-              <p className="text-muted-foreground">Chưa có thông tin liên hệ</p>
-            )}
-          </CardContent>
-        </Card>
+        {/* Contact Info — hidden for viewers (except self) */}
+        {(!isViewer || isSelf) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Liên hệ</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {person.phone && (
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <a href={`tel:${person.phone}`} className="text-primary hover:underline">
+                    {person.phone}
+                  </a>
+                </div>
+              )}
+              {person.email && (
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <a href={`mailto:${person.email}`} className="text-primary hover:underline">
+                    {person.email}
+                  </a>
+                </div>
+              )}
+              {person.zalo && (
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                  <span>Zalo: {person.zalo}</span>
+                </div>
+              )}
+              {person.facebook && (
+                <div className="flex items-center gap-2">
+                  <Facebook className="h-4 w-4 text-muted-foreground" />
+                  <a href={person.facebook} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                    Facebook
+                  </a>
+                </div>
+              )}
+              {person.address && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span>{person.address}</span>
+                </div>
+              )}
+              {!person.phone && !person.email && !person.zalo && !person.facebook && !person.address && (
+                <p className="text-muted-foreground">Chưa có thông tin liên hệ</p>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Biography */}

@@ -13,6 +13,7 @@ interface AuthContextValue {
   isLoading: boolean;
   isAdmin: boolean;
   isEditor: boolean;
+  isVerified: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -116,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAdmin = profile?.role === 'admin';
   const isEditor = profile?.role === 'admin' || profile?.role === 'editor';
+  const isVerified = profile?.is_verified ?? false;
 
   return (
     <AuthContext.Provider
@@ -126,6 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         isAdmin,
         isEditor,
+        isVerified,
         signIn,
         signUp,
         signOut,

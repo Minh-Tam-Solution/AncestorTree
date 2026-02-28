@@ -27,7 +27,7 @@ additional_redirect_urls = ["http://localhost:4000"]
 [auth.email]
 enable_signup = true
 double_confirm_changes = false
-enable_confirmations = false
+enable_confirmations = true
 
 [storage]
 enabled = true

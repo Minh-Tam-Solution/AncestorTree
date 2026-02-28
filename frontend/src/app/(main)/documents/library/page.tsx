@@ -164,9 +164,20 @@ function DocumentCard({ doc, personName }: { doc: ClanDocument; personName?: str
       <CardContent className="p-4 space-y-2">
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-medium text-sm line-clamp-2">{doc.title}</h3>
-          <Badge variant="outline" className="text-xs shrink-0">
-            {DOCUMENT_CATEGORY_LABELS[doc.category]}
-          </Badge>
+          <div className="flex gap-1 shrink-0">
+            <Badge variant="outline" className="text-xs">
+              {DOCUMENT_CATEGORY_LABELS[doc.category]}
+            </Badge>
+            {doc.privacy_level === 0 && (
+              <Badge className="text-xs bg-green-100 text-green-800">Công khai</Badge>
+            )}
+            {doc.privacy_level === 1 && (
+              <Badge className="text-xs bg-blue-100 text-blue-800">Thành viên</Badge>
+            )}
+            {doc.privacy_level === 2 && (
+              <Badge className="text-xs bg-red-100 text-red-800">Nội bộ</Badge>
+            )}
+          </div>
         </div>
 
         {doc.description && (

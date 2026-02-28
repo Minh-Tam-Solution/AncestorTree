@@ -2,7 +2,7 @@
  * @project AncestorTree
  * @file src/middleware.ts
  * @description Auth middleware for protected routes — Next.js 16 convention
- * @version 1.5.0
+ * @version 1.6.0
  * @updated 2026-02-28
  *
  * Docker networking fix:
@@ -24,6 +24,8 @@ import { createServerClient } from '@supabase/ssr';
 const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password', '/welcome', '/api/debug'];
 // Auth pages only: authenticated users are redirected away from these (not from /welcome or /api/*)
 const authPagePaths = ['/login', '/register', '/forgot-password', '/reset-password'];
+// Accessible when authenticated but NOT yet verified by admin
+const pendingVerificationPath = '/pending-verification';
 // All main app routes require authentication to protect personal data.
 const authRequiredPaths = [
   '/',
@@ -176,24 +178,45 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Admin routes require admin or editor role
-  if (user && pathname.startsWith('/admin')) {
+  // Fetch profile for verification + role checks (single query)
+  if (user && (authRequiredPaths.some(path => pathname.startsWith(path)) || pathname === pendingVerificationPath)) {
     try {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, is_verified')
         .eq('user_id', user.id)
         .single();
 
-      mwLog('INFO', 'admin_check', { pathname, userId: user.id, role: profile?.role ?? null });
+      // Unverified users can only access /pending-verification (and sign out)
+      // Use !== true (not === false) so null/missing profile also blocks access (ISS-03)
+      if (!profile || profile.is_verified !== true) {
+        if (pathname !== pendingVerificationPath) {
+          mwLog('WARN', 'redirect', { pathname, destination: pendingVerificationPath, reason: 'unverified', userId: user.id });
+          return NextResponse.redirect(new URL(pendingVerificationPath, request.url));
+        }
+        return response;
+      }
 
-      if (profile?.role !== 'admin' && profile?.role !== 'editor') {
-        mwLog('WARN', 'redirect', { pathname, destination: '/', reason: 'insufficient_role', role: profile?.role });
+      // Verified user on /pending-verification → redirect to home
+      if (pathname === pendingVerificationPath) {
+        mwLog('INFO', 'redirect', { pathname, destination: '/', reason: 'already_verified' });
         return NextResponse.redirect(new URL('/', request.url));
       }
+
+      // Admin routes require admin or editor role
+      if (pathname.startsWith('/admin')) {
+        mwLog('INFO', 'admin_check', { pathname, userId: user.id, role: profile?.role ?? null });
+        if (profile?.role !== 'admin' && profile?.role !== 'editor') {
+          mwLog('WARN', 'redirect', { pathname, destination: '/', reason: 'insufficient_role', role: profile?.role });
+          return NextResponse.redirect(new URL('/', request.url));
+        }
+      }
     } catch (err) {
-      mwLog('ERROR', 'admin_check_failed', { pathname, error: err instanceof Error ? err.message : String(err) });
-      return NextResponse.redirect(new URL('/', request.url));
+      // On timeout/error, deny access — redirect to pending-verification as safe fallback (ISS-05)
+      mwLog('ERROR', 'profile_check_failed', { pathname, error: err instanceof Error ? err.message : String(err) });
+      if (pathname !== pendingVerificationPath) {
+        return NextResponse.redirect(new URL(pendingVerificationPath, request.url));
+      }
     }
   }
 
