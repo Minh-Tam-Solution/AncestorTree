@@ -2,8 +2,8 @@
  * @project AncestorTree
  * @file src/hooks/use-profiles.ts
  * @description React Query hooks for user profiles
- * @version 1.0.0
- * @updated 2026-02-24
+ * @version 1.1.0
+ * @updated 2026-02-28
  */
 
 'use client';
@@ -16,7 +16,10 @@ import {
   updateUserRole,
   updateLinkedPerson,
   updateEditRootPerson,
+  suspendUser,
+  unsuspendUser,
 } from '@/lib/supabase-data';
+import { deleteUserAccount } from '@/app/(main)/admin/users/actions';
 import type { Profile, UserRole } from '@/types';
 
 // Query keys
@@ -48,7 +51,7 @@ export function useProfile(userId: string | undefined) {
 
 export function useUpdateProfile() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ userId, input }: { userId: string; input: Partial<Profile> }) =>
       updateProfile(userId, input),
@@ -91,6 +94,43 @@ export function useUpdateEditRootPerson() {
   return useMutation({
     mutationFn: ({ userId, personId }: { userId: string; personId: string | null }) =>
       updateEditRootPerson(userId, personId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKeys.all });
+    },
+  });
+}
+
+// Suspend a user account (admin only)
+export function useSuspendUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ userId, reason }: { userId: string; reason?: string }) =>
+      suspendUser(userId, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKeys.all });
+    },
+  });
+}
+
+// Unsuspend / restore a user account (admin only)
+export function useUnsuspendUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (userId: string) => unsuspendUser(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKeys.all });
+    },
+  });
+}
+
+// Permanently delete a user account via server action (service role)
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (userId: string) => deleteUserAccount(userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: profileKeys.all });
     },

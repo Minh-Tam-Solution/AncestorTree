@@ -23,6 +23,13 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 COPY --from=deps /app/node_modules ./node_modules
+
+# BUILD_DATE allows targeted cache busting without discarding the deps layer.
+# Pass via: docker compose build --build-arg BUILD_DATE=$(date +%s)
+# or simply use: make fresh
+ARG BUILD_DATE=none
+ENV BUILD_DATE=$BUILD_DATE
+
 COPY . .
 
 # Standalone mode required for production Docker (no dev server)

@@ -18,6 +18,7 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Printer, User, Users, Heart } from 'lucide-react';
 import { CLAN_FULL_NAME } from '@/lib/clan-config';
+import { useClanSettings } from '@/hooks/use-clan-settings';
 
 function PersonEntry({ entry }: { entry: BookPerson }) {
   const { person, father, mother, spouses, children, zodiacYear } = entry;
@@ -121,6 +122,8 @@ function ChapterSection({ chapter }: { chapter: BookChapter }) {
 
 export default function BookPage() {
   const { data: treeData, isLoading, error } = useTreeData();
+  const { data: cs } = useClanSettings();
+  const clanFullName = cs?.clan_full_name ?? CLAN_FULL_NAME;
 
   if (isLoading) {
     return (
@@ -182,7 +185,7 @@ export default function BookPage() {
             Gia Phả
           </h1>
           <h2 className="text-xl md:text-2xl font-semibold text-emerald-700 mb-4">
-            {CLAN_FULL_NAME}
+            {clanFullName}
           </h2>
           <p className="text-muted-foreground italic mb-6">
             &ldquo;Gìn giữ tinh hoa - Tiếp bước cha ông&rdquo;
@@ -217,7 +220,7 @@ export default function BookPage() {
 
         {/* Footer */}
         <div className="text-center text-sm text-muted-foreground border-t pt-6">
-          <p>Gia Phả Điện Tử - {CLAN_FULL_NAME}</p>
+          <p>Gia Phả Điện Tử - {clanFullName}</p>
           <p>Được tạo bởi AncestorTree · {new Date().getFullYear()}</p>
         </div>
       </div>

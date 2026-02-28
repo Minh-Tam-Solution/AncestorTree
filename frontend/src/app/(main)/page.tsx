@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { GitBranchPlus, Calendar, Users, ArrowRight } from 'lucide-react';
 import { StatsCard } from '@/components/home/stats-card';
 import { FeaturedCharter } from '@/components/home/featured-charter';
-import { CLAN_FULL_NAME } from '@/lib/clan-config';
+import { ClanFullName } from '@/components/home/clan-name';
 
 const features = [
   {
@@ -48,7 +48,7 @@ export default function HomePage() {
       <section className="relative bg-gradient-to-br from-emerald-800 to-emerald-950 text-white">
         <div className="container mx-auto px-4 py-16 md:py-24 text-center">
           <h1 className="text-3xl md:text-5xl font-bold mb-4">
-            {CLAN_FULL_NAME}
+            <ClanFullName />
           </h1>
           <p className="text-lg md:text-xl text-emerald-100 mb-8 max-w-2xl mx-auto">
             &ldquo;Gìn giữ tinh hoa - Tiếp bước cha ông&rdquo;

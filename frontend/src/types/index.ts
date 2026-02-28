@@ -104,6 +104,8 @@ export interface Profile {
   /** FK → people.id: subtree root this user can edit (null = global editor) */
   edit_root_person_id?: string;
   avatar_url?: string;
+  is_suspended?: boolean;
+  suspension_reason?: string;
   created_at: string;
   updated_at: string;
 }
@@ -385,6 +387,24 @@ export interface PersonRelations {
     children: Person[];
   }>;
 }
+
+// ─── Clan Settings ────────────────────────────────────────────────────────────
+
+export interface ClanSettings {
+  id: string;
+  clan_name: string;
+  clan_full_name: string;
+  clan_founding_year?: number;
+  clan_origin?: string;
+  clan_patriarch?: string;
+  clan_description?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  updated_at: string;
+  updated_by?: string;
+}
+
+export type UpdateClanSettingsInput = Partial<Omit<ClanSettings, 'id' | 'updated_at' | 'updated_by'>>;
 
 // ─── Zodiac ───────────────────────────────────────────────────────────────────
 

@@ -480,6 +480,39 @@ export async function updateEditRootPerson(
   return data;
 }
 
+// Suspend / unsuspend a user account (admin only — enforced by RLS)
+export async function suspendUser(userId: string, reason?: string): Promise<Profile> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({
+      is_suspended: true,
+      suspension_reason: reason ?? null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function unsuspendUser(userId: string): Promise<Profile> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({
+      is_suspended: false,
+      suspension_reason: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
 // FR-510: check if target person is in the subtree rooted at rootPersonId
 // Calls the PostgreSQL function is_person_in_subtree via supabase.rpc
 export async function checkPersonInSubtree(
@@ -743,6 +776,15 @@ export async function getContributionsByPerson(personId: string): Promise<Contri
 
   if (error) throw error;
   return data || [];
+}
+
+export async function deleteContribution(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('contributions')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

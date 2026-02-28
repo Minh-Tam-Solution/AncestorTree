@@ -708,7 +708,59 @@ Authorization: Bearer {JWT}
 | Đăng xuất | POST | `/auth/v1/logout` | (auth header) |
 | Quên mật khẩu | POST | `/auth/v1/recover` | `{ email }` |
 | Đổi mật khẩu | PUT | `/auth/v1/user` | `{ password }` + auth header |
-| Lấy user hiện tại | GET | `/auth/v1/user` | (auth header) |
+| Lấy user hiện tại + factors | GET | `/auth/v1/user` | (auth header) |
+| Đổi thông tin user | PUT | `/auth/v1/user` | `{ password, data }` + auth header |
+
+### 3.1 MFA / TOTP (GoTrue v2.186.0)
+
+> **Yêu cầu:** `[auth.mfa]` phải được bật trong `supabase/config.toml`.
+> **Lưu ý GoTrue v2.186.0:** `GET /auth/v1/factors` không tồn tại (405). Danh sách factors lấy từ `GET /auth/v1/user → .factors[]`. Endpoint `/auth/v1/aal` không tồn tại (404); AAL đọc từ JWT payload claim `aal`.
+
+| Operation | Method | Path | Body / Notes |
+|-----------|--------|------|--------------|
+| Enroll TOTP factor | POST | `/auth/v1/factors` | `{ factor_type: "totp", issuer, friendly_name }` |
+| Unenroll factor | DELETE | `/auth/v1/factors/:id` | (auth header) |
+| Create challenge | POST | `/auth/v1/factors/:id/challenge` | `{}` |
+| Verify challenge | POST | `/auth/v1/factors/:id/verify` | `{ challenge_id, code }` |
+| List factors | GET | `/auth/v1/user` | Response: `{ ..., factors: [{id, status, friendly_name, factor_type}] }` |
+| Get AAL | (from JWT) | — | JWT payload field `aal`: `"aal1"` \| `"aal2"` |
+
+**Response — enroll:**
+```json
+{
+  "id": "uuid",
+  "type": "totp",
+  "totp": {
+    "qr_code": "data:image/svg+xml;base64,...",
+    "secret": "BASE32SECRET",
+    "uri": "otpauth://totp/..."
+  }
+}
+```
+
+**E2E test:** `src/app/api/__tests__/mfa-account.test.ts` — 35 tests, GoTrue v2.186.0
+
+### 3.2 User Management (Profiles)
+
+> **Profiles table:** column `user_id` = auth UID (NOT `profiles.id` which is the profile's own UUID).
+
+| Operation | Endpoint | Auth |
+|-----------|----------|------|
+| Fetch own profile | `GET /rest/v1/profiles?user_id=eq.{uid}` | anon_key + Bearer |
+| Update own profile | `PATCH /rest/v1/profiles?user_id=eq.{uid}` | anon_key + Bearer |
+| Suspend user | `PATCH /rest/v1/profiles?user_id=eq.{uid}` `{ is_suspended: true, suspension_reason: "..." }` | service_role |
+| Unsuspend user | `PATCH /rest/v1/profiles?user_id=eq.{uid}` `{ is_suspended: false, suspension_reason: null }` | service_role |
+| Delete user (Auth) | Server Action `deleteUserAccount(userId)` | service_role admin API |
+
+**config.toml required (local dev):**
+```toml
+[auth.mfa]
+max_enrolled_factors = 10
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+```
 
 ---
 

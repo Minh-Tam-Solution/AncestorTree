@@ -1,22 +1,32 @@
 /**
  * @project AncestorTree
  * @file src/app/(main)/admin/users/page.tsx
- * @description User management page — role + tree mapping (FR-507~509)
- * @version 3.0.0
- * @updated 2026-02-25
+ * @description User management page — role + tree mapping + suspend + delete (FR-507~509)
+ * @version 4.0.0
+ * @updated 2026-02-28
  */
 
 'use client';
 
 import { useState } from 'react';
-import { useProfiles, useUpdateUserRole, useUpdateLinkedPerson, useUpdateEditRootPerson } from '@/hooks/use-profiles';
+import {
+  useProfiles,
+  useUpdateUserRole,
+  useUpdateLinkedPerson,
+  useUpdateEditRootPerson,
+  useSuspendUser,
+  useUnsuspendUser,
+  useDeleteUser,
+} from '@/hooks/use-profiles';
 import { useSearchPeople, usePerson } from '@/hooks/use-people';
+import { useAuth } from '@/components/auth/auth-provider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Table,
   TableBody,
@@ -62,6 +72,9 @@ import {
   Search,
   X,
   GitBranch,
+  Ban,
+  ShieldCheck,
+  Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -305,8 +318,12 @@ function TreeMappingDialog({ user, open, onOpenChange }: TreeMappingDialogProps)
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function UsersPage() {
+  const { profile: currentProfile } = useAuth();
   const { data: profiles, isLoading, error } = useProfiles();
   const updateRole = useUpdateUserRole();
+  const suspendMutation = useSuspendUser();
+  const unsuspendMutation = useUnsuspendUser();
+  const deleteMutation = useDeleteUser();
 
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -317,6 +334,19 @@ export default function UsersPage() {
   } | null>(null);
 
   const [mappingUser, setMappingUser] = useState<Profile | null>(null);
+
+  // Suspend dialog state
+  const [suspendDialog, setSuspendDialog] = useState<{
+    open: boolean;
+    user: Profile;
+  } | null>(null);
+  const [suspendReason, setSuspendReason] = useState('');
+
+  // Delete dialog state
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    user: Profile;
+  } | null>(null);
 
   const handleRoleChange = (userId: string, newRole: UserRole, currentRole: UserRole, userName: string) => {
     if (newRole === currentRole) return;
@@ -336,8 +366,50 @@ export default function UsersPage() {
     }
   };
 
+  const confirmSuspend = async () => {
+    if (!suspendDialog) return;
+    try {
+      await suspendMutation.mutateAsync({
+        userId: suspendDialog.user.user_id,
+        reason: suspendReason.trim() || undefined,
+      });
+      toast.success(`Đã khoá tài khoản ${suspendDialog.user.full_name || suspendDialog.user.email}`);
+    } catch (err) {
+      toast.error('Lỗi khi khoá tài khoản');
+      console.error(err);
+    } finally {
+      setSuspendDialog(null);
+      setSuspendReason('');
+    }
+  };
+
+  const confirmUnsuspend = async (user: Profile) => {
+    try {
+      await unsuspendMutation.mutateAsync(user.user_id);
+      toast.success(`Đã mở khoá tài khoản ${user.full_name || user.email}`);
+    } catch (err) {
+      toast.error('Lỗi khi mở khoá tài khoản');
+      console.error(err);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteDialog) return;
+    try {
+      await deleteMutation.mutateAsync(deleteDialog.user.user_id);
+      toast.success(`Đã xoá tài khoản ${deleteDialog.user.full_name || deleteDialog.user.email}`);
+    } catch (err) {
+      toast.error('Lỗi khi xoá tài khoản');
+      console.error(err);
+    } finally {
+      setDeleteDialog(null);
+    }
+  };
+
   const formatDate = (dateStr: string) =>
     new Date(dateStr).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+  const isSelf = (user: Profile) => user.user_id === currentProfile?.user_id;
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -426,7 +498,7 @@ export default function UsersPage() {
               </TableHeader>
               <TableBody>
                 {profiles.map((user) => (
-                  <TableRow key={user.id}>
+                  <TableRow key={user.id} className={user.is_suspended ? 'opacity-60' : ''}>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar className="h-9 w-9">
@@ -436,8 +508,20 @@ export default function UsersPage() {
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium">{user.full_name || 'Chưa cập nhật'}</p>
+                          <p className="font-medium flex items-center gap-1.5">
+                            {user.full_name || 'Chưa cập nhật'}
+                            {user.is_suspended && (
+                              <Badge variant="destructive" className="text-[10px] px-1 py-0 h-4">
+                                Đã khoá
+                              </Badge>
+                            )}
+                          </p>
                           <p className="text-xs text-muted-foreground sm:hidden">{user.email}</p>
+                          {user.is_suspended && user.suspension_reason && (
+                            <p className="text-xs text-destructive mt-0.5 truncate max-w-[180px]">
+                              {user.suspension_reason}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </TableCell>
@@ -468,17 +552,62 @@ export default function UsersPage() {
                     </TableCell>
                     <TableCell className="hidden md:table-cell">{formatDate(user.created_at)}</TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1.5">
                         {/* Tree mapping button */}
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-8 px-2"
+                          className="h-8 w-8 p-0"
                           onClick={() => setMappingUser(user)}
                           title="Gắn vào cây gia phả"
+                          disabled={isSelf(user)}
                         >
                           <Link2 className="h-3.5 w-3.5" />
                         </Button>
+
+                        {/* Suspend / unsuspend button */}
+                        {!isSelf(user) && (
+                          user.is_suspended ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-green-600 border-green-200 hover:bg-green-50"
+                              onClick={() => confirmUnsuspend(user)}
+                              disabled={unsuspendMutation.isPending}
+                              title="Mở khoá tài khoản"
+                            >
+                              {unsuspendMutation.isPending ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <ShieldCheck className="h-3.5 w-3.5" />
+                              )}
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-amber-600 border-amber-200 hover:bg-amber-50"
+                              onClick={() => { setSuspendReason(''); setSuspendDialog({ open: true, user }); }}
+                              title="Khoá tài khoản"
+                            >
+                              <Ban className="h-3.5 w-3.5" />
+                            </Button>
+                          )
+                        )}
+
+                        {/* Delete button */}
+                        {!isSelf(user) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-destructive border-destructive/30 hover:bg-destructive/10"
+                            onClick={() => setDeleteDialog({ open: true, user })}
+                            title="Xoá tài khoản"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+
                         {/* Role selector */}
                         <Select
                           value={user.role}
@@ -490,6 +619,7 @@ export default function UsersPage() {
                               user.full_name || user.email,
                             )
                           }
+                          disabled={isSelf(user)}
                         >
                           <SelectTrigger className="w-36 h-8">
                             <SelectValue />
@@ -559,6 +689,97 @@ export default function UsersPage() {
                 <>
                   <CheckCircle className="h-4 w-4 mr-2" />
                   Xác nhận
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Suspend dialog */}
+      <AlertDialog
+        open={suspendDialog?.open}
+        onOpenChange={(open) => { if (!open) { setSuspendDialog(null); setSuspendReason(''); } }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Ban className="h-5 w-5 text-amber-600" />
+              Khoá tài khoản
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Tài khoản <strong>{suspendDialog?.user.full_name || suspendDialog?.user.email}</strong> sẽ bị khoá.
+              Người dùng sẽ bị đăng xuất và không thể đăng nhập cho đến khi được mở khoá.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="px-1 py-2">
+            <Label htmlFor="suspend-reason" className="text-sm font-medium">
+              Lý do khoá (tùy chọn)
+            </Label>
+            <Textarea
+              id="suspend-reason"
+              className="mt-1.5"
+              placeholder="Nhập lý do khoá tài khoản..."
+              value={suspendReason}
+              onChange={(e) => setSuspendReason(e.target.value)}
+              rows={2}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmSuspend}
+              disabled={suspendMutation.isPending}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              {suspendMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Đang xử lý...
+                </>
+              ) : (
+                <>
+                  <Ban className="h-4 w-4 mr-2" />
+                  Khoá tài khoản
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete dialog */}
+      <AlertDialog
+        open={deleteDialog?.open}
+        onOpenChange={(open) => { if (!open) setDeleteDialog(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Xoá tài khoản vĩnh viễn
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Tài khoản <strong>{deleteDialog?.user.full_name || deleteDialog?.user.email}</strong> sẽ bị xoá hoàn toàn.
+              Hành động này <strong>không thể hoàn tác</strong> — mọi dữ liệu liên kết cũng sẽ bị xoá.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Đang xoá...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Xoá tài khoản
                 </>
               )}
             </AlertDialogAction>

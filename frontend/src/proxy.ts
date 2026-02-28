@@ -1,8 +1,8 @@
 /**
  * @project AncestorTree
- * @file src/middleware.ts
- * @description Auth middleware for protected routes — Next.js 16 convention
- * @version 1.5.0
+ * @file src/proxy.ts
+ * @description Auth proxy for protected routes — Next.js 16 convention (replaces middleware.ts)
+ * @version 2.0.0
  * @updated 2026-02-28
  *
  * Docker networking fix:
@@ -11,7 +11,7 @@
  *     sb-${hostname.split('.')[0]}-auth-token
  *   So browser cookies are named: sb-localhost-auth-token
  *
- *   The server (middleware) must use the SAME URL to look for the SAME cookie name.
+ *   The server (proxy) must use the SAME URL to look for the SAME cookie name.
  *   But inside Docker, localhost = the container (not the host). So network calls
  *   must be routed to host.docker.internal:54321 via a custom fetch wrapper.
  */
@@ -29,7 +29,7 @@ const authRequiredPaths = [
   '/',
   '/people', '/tree', '/directory', '/events',
   '/achievements', '/charter', '/cau-duong', '/contributions',
-  '/documents', '/fund', '/admin', '/help',
+  '/documents', '/fund', '/admin', '/help', '/settings',
 ];
 
 // Structured logger — writes to stdout (visible in `docker compose logs -f app`)
@@ -70,7 +70,7 @@ function makeDockerAwareFetch() {
 
 const dockerFetch = makeDockerAwareFetch();
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Desktop mode: bypass all auth — single-user admin, no Supabase Auth

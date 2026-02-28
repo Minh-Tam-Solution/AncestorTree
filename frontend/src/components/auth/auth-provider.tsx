@@ -64,6 +64,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(s?.user ?? null);
       if (s?.user) {
         const p = await fetchProfile(s.user.id);
+        if (p?.is_suspended) {
+          authLog('getSession:suspended', { userId: s.user.id });
+          await supabase.auth.signOut();
+          window.location.replace('/login?error=suspended');
+          return;
+        }
         setProfile(p);
       }
       setIsLoading(false);
@@ -78,6 +84,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (s?.user) {
           const p = await fetchProfile(s.user.id);
+          if (p?.is_suspended) {
+            authLog('onAuthStateChange:suspended', { userId: s.user.id });
+            await supabase.auth.signOut();
+            window.location.replace('/login?error=suspended');
+            return;
+          }
           setProfile(p);
         } else {
           setProfile(null);
@@ -112,6 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
+    window.location.replace('/login');
   };
 
   const isAdmin = profile?.role === 'admin';

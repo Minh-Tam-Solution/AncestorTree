@@ -15,6 +15,7 @@ import {
   createContribution,
   reviewContribution,
   getContributionsByPerson,
+  deleteContribution,
 } from '@/lib/supabase-data';
 import type { Contribution, ContributionStatus } from '@/types';
 
@@ -61,6 +62,17 @@ export function useCreateContribution() {
       changes: Record<string, unknown>;
       reason?: string;
     }) => createContribution(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: contributionKeys.all });
+    },
+  });
+}
+
+export function useDeleteContribution() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteContribution(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: contributionKeys.all });
     },

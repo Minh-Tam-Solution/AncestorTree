@@ -68,8 +68,40 @@ INSERT INTO auth.identities (
     NOW(), NOW(), NOW()
 );
 
--- handle_new_user trigger sẽ tự tạo profiles, sau đó promote admin
+-- Editor account: editor@giapha.local / editor123
+INSERT INTO auth.users (
+    id, instance_id, email, encrypted_password,
+    email_confirmed_at, created_at, updated_at,
+    raw_user_meta_data, raw_app_meta_data,
+    confirmation_token, recovery_token, email_change, email_change_token_new,
+    aud, role, is_super_admin
+) VALUES (
+    'aaaaaaaa-0003-4000-a000-000000000003',
+    '00000000-0000-0000-0000-000000000000',
+    'editor@giapha.local',
+    crypt('editor123', gen_salt('bf')),
+    NOW(), NOW(), NOW(),
+    '{"full_name": "Biên tập viên"}'::jsonb,
+    '{"provider": "email", "providers": ["email"]}'::jsonb,
+    '', '', '', '',
+    'authenticated', 'authenticated', false
+);
+
+INSERT INTO auth.identities (
+    id, user_id, identity_data, provider, provider_id,
+    created_at, updated_at, last_sign_in_at
+) VALUES (
+    'aaaaaaaa-0003-4000-a000-000000000003',
+    'aaaaaaaa-0003-4000-a000-000000000003',
+    '{"sub": "aaaaaaaa-0003-4000-a000-000000000003", "email": "editor@giapha.local"}'::jsonb,
+    'email',
+    'aaaaaaaa-0003-4000-a000-000000000003',
+    NOW(), NOW(), NOW()
+);
+
+-- handle_new_user trigger sẽ tự tạo profiles, sau đó promote admin + editor
 UPDATE public.profiles SET role = 'admin' WHERE user_id = 'aaaaaaaa-0001-4000-a000-000000000001';
+UPDATE public.profiles SET role = 'editor' WHERE user_id = 'aaaaaaaa-0003-4000-a000-000000000003';
 
 -- ─── People (Đời 1–5, 18 thành viên) ─────────────────────────────────────
 
@@ -158,5 +190,8 @@ INSERT INTO public.clan_articles (title, content, category, sort_order) VALUES
 ('Quy ước họp họ', 'Họp họ tổ chức vào ngày Rằm tháng Giêng hàng năm tại nhà thờ họ. Mọi thành viên từ 18 tuổi trở lên đều có quyền tham dự và biểu quyết.', 'quy_uoc', 1);
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- DONE — Login: admin@giapha.local / admin123
+-- DONE — Demo accounts:
+--   admin@giapha.local  / admin123  (Quản trị viên)
+--   editor@giapha.local / editor123 (Biên tập viên)
+--   viewer@giapha.local / viewer123 (Người xem)
 -- ═══════════════════════════════════════════════════════════════════════════

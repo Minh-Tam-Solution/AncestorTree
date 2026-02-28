@@ -15,6 +15,7 @@ import { notFoundError, sqliteError } from './error-mapper';
 const TABLES_WITH_UPDATED_AT = new Set([
   'people', 'families', 'profiles', 'achievements',
   'clan_articles', 'cau_duong_pools', 'cau_duong_assignments',
+  'clan_settings',
 ]);
 
 // ─── Types ──────────────────────────────────────────────────────────────────

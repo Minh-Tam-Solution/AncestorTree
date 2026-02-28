@@ -39,6 +39,11 @@ function createSupabaseClient(): SupabaseClient {
     return createBrowserClient(supabaseUrl, supabaseAnonKey, {
       global: { fetch: fetchWithTimeout },
       auth: { lock: noopLock },
+      cookieOptions: {
+        maxAge: 3600,                                       // 1-hour session expiry
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+      },
     });
   }
   return createClient('https://placeholder.supabase.co', 'placeholder-key');

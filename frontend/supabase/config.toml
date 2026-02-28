@@ -29,6 +29,13 @@ enable_signup = true
 double_confirm_changes = false
 enable_confirmations = false
 
+[auth.mfa]
+max_enrolled_factors = 10
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
 [storage]
 enabled = true
 file_size_limit = "10MB"

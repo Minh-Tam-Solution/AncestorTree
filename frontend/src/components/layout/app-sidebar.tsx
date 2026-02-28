@@ -2,7 +2,7 @@
  * @project AncestorTree
  * @file src/components/layout/app-sidebar.tsx
  * @description Main navigation sidebar component
- * @version 2.1.0
+ * @version 2.2.0
  * @updated 2026-02-28
  */
 
@@ -27,6 +27,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -43,6 +44,8 @@ import {
   LogIn,
   UserPlus,
   ChevronUp,
+  ShieldCheck,
+  UserCircle,
   Trophy,
   BookOpen,
   ScrollText,
@@ -51,7 +54,17 @@ import {
   HelpCircle,
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/auth-provider';
-import { CLAN_NAME, CLAN_INITIAL, CLAN_SUBTITLE } from '@/lib/clan-config';
+import { CLAN_NAME, CLAN_FULL_NAME } from '@/lib/clan-config';
+import { useClanSettings } from '@/hooks/use-clan-settings';
+
+function deriveInitial(name: string): string {
+  const parts = name.trim().split(' ');
+  return parts.length > 1 ? (parts[parts.length - 1][0] ?? '?') : (parts[0][0] ?? '?');
+}
+
+function deriveSubtitle(fullName: string, shortName: string): string {
+  return fullName.startsWith(shortName) ? fullName.slice(shortName.length).trim() : '';
+}
 
 const mainNavItems = [
   { title: 'Trang chủ', url: '/', icon: Home },
@@ -68,10 +81,17 @@ const mainNavItems = [
   { title: 'Hướng dẫn', url: '/help', icon: HelpCircle },
 ];
 
+// Visible to any logged-in user
+const accountNavItems = [
+  { title: 'Hồ sơ cá nhân', url: '/settings/profile', icon: UserCircle },
+  { title: 'Bảo mật (MFA)',  url: '/settings/security', icon: ShieldCheck },
+];
+
 const adminNavItems = [
   { title: 'Bảng điều khiển', url: '/admin', icon: Settings },
   { title: 'Người dùng', url: '/admin/users', icon: UserCog },
   { title: 'Đề xuất chỉnh sửa', url: '/admin/contributions', icon: ClipboardList },
+  { title: 'QL Lịch sự kiện', url: '/admin/events', icon: Calendar },
   { title: 'QL Vinh danh', url: '/admin/achievements', icon: Trophy },
   { title: 'QL Quỹ & Học bổng', url: '/admin/fund', icon: BookOpen },
   { title: 'QL Hương ước', url: '/admin/charter', icon: ScrollText },
@@ -84,6 +104,11 @@ const adminNavItems = [
 export function AppSidebar() {
   const pathname = usePathname();
   const { user, profile, isAdmin, isEditor, signOut } = useAuth();
+  const { data: cs } = useClanSettings();
+  const clanName = cs?.clan_name ?? CLAN_NAME;
+  const clanFullName = cs?.clan_full_name ?? CLAN_FULL_NAME;
+  const clanInitial = deriveInitial(clanName);
+  const clanSubtitle = deriveSubtitle(clanFullName, clanName);
 
   const getInitials = (name?: string) => {
     if (!name) return 'U';
@@ -95,11 +120,11 @@ export function AppSidebar() {
       <SidebarHeader className="border-b px-4 py-4">
         <Link href="/" className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-lg">
-            {CLAN_INITIAL}
+            {clanInitial}
           </div>
           <div className="flex flex-col">
-            <span className="font-semibold text-sm">{CLAN_NAME}</span>
-            {CLAN_SUBTITLE && <span className="text-xs text-muted-foreground">{CLAN_SUBTITLE}</span>}
+            <span className="font-semibold text-sm">{clanName}</span>
+            {clanSubtitle && <span className="text-xs text-muted-foreground">{clanSubtitle}</span>}
           </div>
         </Link>
       </SidebarHeader>
@@ -122,6 +147,26 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {user && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Tài khoản</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {accountNavItems.map((item) => (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton asChild isActive={pathname.startsWith(item.url)}>
+                      <Link href={item.url}>
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         {(isAdmin || isEditor) && (
           <SidebarGroup>
@@ -163,6 +208,19 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings/profile">
+                      <UserCircle className="mr-2 h-4 w-4" />
+                      Hồ sơ cá nhân
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings/security">
+                      <ShieldCheck className="mr-2 h-4 w-4" />
+                      Bảo mật (MFA)
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => signOut()}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Đăng xuất
