@@ -224,6 +224,7 @@ v1.6.0 LocalDev  [##########] Done - Supabase CLI + Docker local mode
 v1.7.0 Security  [##########] Done - RLS hardening + middleware fix + privacy defaults
 v1.8.0 Desktop   [##########] Done - Electron + sql.js standalone desktop app
 v2.1.0 Landing   [##########] Done - Landing page + community docs + SEO
+v2.2.1 Security  [##########] Done - Security patch + Clan name config + Settings page
 v2.2.0 Documents [##########] Done - Kho tài liệu + In-App Help guide
 v3.0.0 Community [----------] Future - Nhà thờ họ, Notifications, Cross-clan
 ```
