@@ -70,7 +70,7 @@ const mainNavItems = [
   { title: 'Trang chủ', url: '/', icon: Home },
   { title: 'Cây gia phả', url: '/tree', icon: GitBranchPlus },
   { title: 'Thành viên', url: '/people', icon: Users },
-  { title: 'Danh bạ', url: '/directory', icon: BookUser },
+  { title: 'Danh bạ', url: '/directory', icon: BookUser, viewerHidden: true },
   { title: 'Lịch cúng lễ', url: '/events', icon: Calendar },
   { title: 'Đề xuất', url: '/contributions', icon: ClipboardList },
   { title: 'Vinh danh', url: '/achievements', icon: Trophy },
@@ -134,7 +134,9 @@ export function AppSidebar() {
           <SidebarGroupLabel>Menu chính</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainNavItems.map((item) => (
+              {mainNavItems
+                .filter((item) => !item.viewerHidden || isEditor)
+                .map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild isActive={item.url === '/' ? pathname === '/' : pathname.startsWith(item.url)}>
                     <Link href={item.url}>

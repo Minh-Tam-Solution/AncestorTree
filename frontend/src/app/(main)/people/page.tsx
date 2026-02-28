@@ -9,6 +9,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useAuth } from '@/components/auth/auth-provider';
 import { usePeople, useStats } from '@/hooks/use-people';
 import { PersonCard } from '@/components/people/person-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +21,7 @@ import { Search, Filter, Users, Plus, X } from 'lucide-react';
 import Link from 'next/link';
 
 export default function PeoplePage() {
+  const { isEditor } = useAuth();
   const { data: people, isLoading, error } = usePeople();
   const { data: stats } = useStats();
   
@@ -101,12 +103,14 @@ export default function PeoplePage() {
             {stats ? `${stats.totalPeople} người trong ${stats.totalGenerations} đời` : 'Đang tải...'}
           </p>
         </div>
-        <Button asChild>
-          <Link href="/people/new">
-            <Plus className="h-4 w-4 mr-2" />
-            Thêm mới
-          </Link>
-        </Button>
+        {isEditor && (
+          <Button asChild>
+            <Link href="/people/new">
+              <Plus className="h-4 w-4 mr-2" />
+              Thêm mới
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* Filters */}
@@ -217,9 +221,11 @@ export default function PeoplePage() {
               ) : (
                 <>
                   <p>Chưa có dữ liệu thành viên</p>
-                  <Button asChild variant="link">
-                    <Link href="/people/new">Thêm thành viên đầu tiên</Link>
-                  </Button>
+                  {isEditor && (
+                    <Button asChild variant="link">
+                      <Link href="/people/new">Thêm thành viên đầu tiên</Link>
+                    </Button>
+                  )}
                 </>
               )}
             </CardContent>

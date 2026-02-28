@@ -104,8 +104,6 @@ export interface Profile {
   /** FK → people.id: subtree root this user can edit (null = global editor) */
   edit_root_person_id?: string;
   avatar_url?: string;
-  is_suspended?: boolean;
-  suspension_reason?: string;
   created_at: string;
   updated_at: string;
 }
@@ -311,6 +309,8 @@ export interface ClanDocument {
   tags?: string;
   person_id?: string;
   uploaded_by?: string;
+  /** 0=public, 1=members only, 2=admin only */
+  privacy_level: number;
   created_at: string;
   updated_at: string;
 }

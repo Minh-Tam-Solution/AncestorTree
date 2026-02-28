@@ -16,8 +16,6 @@ import {
   updateUserRole,
   updateLinkedPerson,
   updateEditRootPerson,
-  suspendUser,
-  unsuspendUser,
 } from '@/lib/supabase-data';
 import { deleteUserAccount } from '@/app/(main)/admin/users/actions';
 import type { Profile, UserRole } from '@/types';
@@ -26,6 +24,7 @@ import type { Profile, UserRole } from '@/types';
 export const profileKeys = {
   all: ['profiles'] as const,
   lists: () => [...profileKeys.all, 'list'] as const,
+  unverified: () => [...profileKeys.all, 'unverified'] as const,
   details: () => [...profileKeys.all, 'detail'] as const,
   detail: (id: string) => [...profileKeys.details(), id] as const,
 };
@@ -94,43 +93,6 @@ export function useUpdateEditRootPerson() {
   return useMutation({
     mutationFn: ({ userId, personId }: { userId: string; personId: string | null }) =>
       updateEditRootPerson(userId, personId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: profileKeys.all });
-    },
-  });
-}
-
-// Suspend a user account (admin only)
-export function useSuspendUser() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ userId, reason }: { userId: string; reason?: string }) =>
-      suspendUser(userId, reason),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: profileKeys.all });
-    },
-  });
-}
-
-// Unsuspend / restore a user account (admin only)
-export function useUnsuspendUser() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (userId: string) => unsuspendUser(userId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: profileKeys.all });
-    },
-  });
-}
-
-// Permanently delete a user account via server action (service role)
-export function useDeleteUser() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (userId: string) => deleteUserAccount(userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: profileKeys.all });
     },

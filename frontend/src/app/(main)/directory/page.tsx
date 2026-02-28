@@ -46,19 +46,26 @@ import type { Person } from '@/types';
 type FilterGender = 'all' | '1' | '2';
 type FilterStatus = 'all' | 'living' | 'deceased';
 
-function getContactDisplay(person: Person, isAuthenticated: boolean, linkedPersonId?: string) {
+function getContactDisplay(person: Person, isAuthenticated: boolean, isViewer: boolean, linkedPersonId?: string) {
+  const maskedResult = { phone: null, email: null, address: null, zalo: null, facebook: null, masked: true };
+  // Viewer role: only see names, all contacts masked (except self)
+  if (isViewer && person.id !== linkedPersonId) {
+    return maskedResult;
+  }
   // Privacy level 2 = private: hide contacts from everyone except the person themselves
   if (person.privacy_level === 2 && person.id !== linkedPersonId) {
-    return { phone: null, email: null, address: null, masked: true };
+    return maskedResult;
   }
   // Privacy level 1 = members only: hide contacts from non-authenticated users
   if (person.privacy_level === 1 && !isAuthenticated) {
-    return { phone: null, email: null, address: null, masked: true };
+    return maskedResult;
   }
   return {
     phone: person.phone || null,
     email: person.email || null,
     address: person.address || person.hometown || null,
+    zalo: person.zalo || null,
+    facebook: person.facebook || null,
     masked: false,
   };
 }
@@ -67,6 +74,7 @@ export default function DirectoryPage() {
   const { data: people, isLoading } = usePeople();
   const { user, profile } = useAuth();
   const isAuthenticated = !!user;
+  const isViewer = profile?.role === 'viewer';
 
   const [search, setSearch] = useState('');
   const [generationFilter, setGenerationFilter] = useState<string>('all');
@@ -89,13 +97,16 @@ export default function DirectoryPage() {
       if (statusFilter === 'living' && !p.is_living) return false;
       if (statusFilter === 'deceased' && p.is_living) return false;
 
-      // Search
+      // Search — only match contact fields if user has access (ISS-04)
       if (search) {
         const q = search.toLowerCase();
         const matchName = p.display_name.toLowerCase().includes(q);
-        const matchPhone = p.phone?.toLowerCase().includes(q);
-        const matchEmail = p.email?.toLowerCase().includes(q);
-        const matchAddress = p.address?.toLowerCase().includes(q);
+        const canSeeContacts = !isViewer && isAuthenticated && p.privacy_level !== 2 && !(p.privacy_level === 1 && !isAuthenticated);
+        const isSelf = p.id === profile?.linked_person;
+        const searchContacts = canSeeContacts || isSelf;
+        const matchPhone = searchContacts && p.phone?.toLowerCase().includes(q);
+        const matchEmail = searchContacts && p.email?.toLowerCase().includes(q);
+        const matchAddress = searchContacts && p.address?.toLowerCase().includes(q);
         if (!matchName && !matchPhone && !matchEmail && !matchAddress) return false;
       }
 
@@ -107,7 +118,7 @@ export default function DirectoryPage() {
 
       return true;
     });
-  }, [people, search, generationFilter, genderFilter, statusFilter]);
+  }, [people, search, generationFilter, genderFilter, statusFilter, isViewer, isAuthenticated, profile?.linked_person]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -225,7 +236,7 @@ export default function DirectoryPage() {
                 </TableHeader>
                 <TableBody>
                   {filteredPeople.map(person => {
-                    const contact = getContactDisplay(person, isAuthenticated, profile?.linked_person);
+                    const contact = getContactDisplay(person, isAuthenticated, !!isViewer, profile?.linked_person);
                     return (
                       <TableRow key={person.id}>
                         <TableCell>
@@ -301,18 +312,24 @@ export default function DirectoryPage() {
                           )}
                         </TableCell>
                         <TableCell>
-                          <div className="flex gap-2">
-                            {person.zalo && (
-                              <Badge variant="secondary" className="text-xs">Zalo</Badge>
-                            )}
-                            {person.facebook && (
-                              <a href={person.facebook} target="_blank" rel="noopener noreferrer">
-                                <Badge variant="secondary" className="text-xs gap-1">
-                                  FB <ExternalLink className="h-2.5 w-2.5" />
-                                </Badge>
-                              </a>
-                            )}
-                          </div>
+                          {contact.masked ? (
+                            <span className="flex items-center gap-1 text-muted-foreground text-sm">
+                              <EyeOff className="h-3 w-3" /> Ẩn
+                            </span>
+                          ) : (
+                            <div className="flex gap-2">
+                              {contact.zalo && (
+                                <Badge variant="secondary" className="text-xs">Zalo</Badge>
+                              )}
+                              {contact.facebook && (
+                                <a href={contact.facebook} target="_blank" rel="noopener noreferrer">
+                                  <Badge variant="secondary" className="text-xs gap-1">
+                                    FB <ExternalLink className="h-2.5 w-2.5" />
+                                  </Badge>
+                                </a>
+                              )}
+                            </div>
+                          )}
                         </TableCell>
                       </TableRow>
                     );

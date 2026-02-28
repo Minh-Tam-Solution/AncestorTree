@@ -1,23 +1,15 @@
 /**
  * @project AncestorTree
  * @file src/app/(main)/admin/users/page.tsx
- * @description User management page — role + tree mapping + suspend + delete (FR-507~509)
- * @version 4.0.0
- * @updated 2026-02-28
+ * @description User management page — role + tree mapping (FR-507~509)
+ * @version 3.0.0
+ * @updated 2026-02-25
  */
 
 'use client';
 
 import { useState } from 'react';
-import {
-  useProfiles,
-  useUpdateUserRole,
-  useUpdateLinkedPerson,
-  useUpdateEditRootPerson,
-  useSuspendUser,
-  useUnsuspendUser,
-  useDeleteUser,
-} from '@/hooks/use-profiles';
+import { useProfiles, useUpdateUserRole, useUpdateLinkedPerson, useUpdateEditRootPerson } from '@/hooks/use-profiles';
 import { useSearchPeople, usePerson } from '@/hooks/use-people';
 import { useAuth } from '@/components/auth/auth-provider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -72,9 +64,6 @@ import {
   Search,
   X,
   GitBranch,
-  Ban,
-  ShieldCheck,
-  Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -222,8 +211,11 @@ function TreeMappingDialog({ user, open, onOpenChange }: TreeMappingDialogProps)
   const [editRootPerson, setEditRootPerson] = useState<Person | null>(null);
   const [initialized, setInitialized] = useState(false);
 
-  // Initialise selections from current profile values when dialog opens
-  if (open && !initialized && (initialLinked !== undefined || !user.linked_person)) {
+  // Initialise selections from current profile values when dialog opens (ISS-09)
+  // Wait for BOTH queries to resolve before initializing
+  const linkedReady = initialLinked !== undefined || !user.linked_person;
+  const editRootReady = initialEditRoot !== undefined || !user.edit_root_person_id;
+  if (open && !initialized && linkedReady && editRootReady) {
     setLinkedPerson(initialLinked ?? null);
     setEditRootPerson(initialEditRoot ?? null);
     setInitialized(true);
@@ -321,9 +313,6 @@ export default function UsersPage() {
   const { profile: currentProfile } = useAuth();
   const { data: profiles, isLoading, error } = useProfiles();
   const updateRole = useUpdateUserRole();
-  const suspendMutation = useSuspendUser();
-  const unsuspendMutation = useUnsuspendUser();
-  const deleteMutation = useDeleteUser();
 
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -334,19 +323,6 @@ export default function UsersPage() {
   } | null>(null);
 
   const [mappingUser, setMappingUser] = useState<Profile | null>(null);
-
-  // Suspend dialog state
-  const [suspendDialog, setSuspendDialog] = useState<{
-    open: boolean;
-    user: Profile;
-  } | null>(null);
-  const [suspendReason, setSuspendReason] = useState('');
-
-  // Delete dialog state
-  const [deleteDialog, setDeleteDialog] = useState<{
-    open: boolean;
-    user: Profile;
-  } | null>(null);
 
   const handleRoleChange = (userId: string, newRole: UserRole, currentRole: UserRole, userName: string) => {
     if (newRole === currentRole) return;
@@ -461,7 +437,21 @@ export default function UsersPage() {
           </CardTitle>
           <CardDescription>
             {isLoading ? 'Đang tải...' : `${profiles?.length || 0} người dùng đã đăng ký`}
+            {unverifiedCount > 0 && !isLoading && (
+              <span className="ml-2 text-amber-600">({unverifiedCount} chờ xác nhận)</span>
+            )}
           </CardDescription>
+          {unverifiedCount > 0 && (
+            <Button
+              variant={showUnverifiedOnly ? 'default' : 'outline'}
+              size="sm"
+              className="w-fit"
+              onClick={() => setShowUnverifiedOnly(!showUnverifiedOnly)}
+            >
+              <Clock className="h-3.5 w-3.5 mr-1.5" />
+              {showUnverifiedOnly ? 'Hiện tất cả' : `Chờ xác nhận (${unverifiedCount})`}
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -484,13 +474,14 @@ export default function UsersPage() {
                 Thử lại
               </Button>
             </div>
-          ) : profiles && profiles.length > 0 ? (
+          ) : displayedProfiles.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Người dùng</TableHead>
                   <TableHead className="hidden sm:table-cell">Email</TableHead>
                   <TableHead>Vai trò</TableHead>
+                  <TableHead>Trạng thái</TableHead>
                   <TableHead className="hidden lg:table-cell">Cây gia phả</TableHead>
                   <TableHead className="hidden md:table-cell">Ngày tạo</TableHead>
                   <TableHead className="text-right">Thao tác</TableHead>
@@ -498,7 +489,7 @@ export default function UsersPage() {
               </TableHeader>
               <TableBody>
                 {profiles.map((user) => (
-                  <TableRow key={user.id} className={user.is_suspended ? 'opacity-60' : ''}>
+                  <TableRow key={user.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar className="h-9 w-9">
@@ -531,6 +522,19 @@ export default function UsersPage() {
                         {roleLabels[user.role].label}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      {user.is_verified ? (
+                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Đã xác nhận
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-amber-600 border-amber-300">
+                          <Clock className="h-3 w-3 mr-1" />
+                          Chờ duyệt
+                        </Badge>
+                      )}
+                    </TableCell>
                     {/* Tree mapping column */}
                     <TableCell className="hidden lg:table-cell">
                       <div className="space-y-0.5">
@@ -552,7 +556,7 @@ export default function UsersPage() {
                     </TableCell>
                     <TableCell className="hidden md:table-cell">{formatDate(user.created_at)}</TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1.5">
+                      <div className="flex items-center justify-end gap-2">
                         {/* Tree mapping button */}
                         <Button
                           variant="outline"

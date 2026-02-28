@@ -2,7 +2,7 @@
 project: AncestorTree
 path: CLAUDE.md
 type: agent-guidelines
-version: 2.2.1
+version: 2.3.0
 updated: 2026-02-28
 ---
 
@@ -15,7 +15,7 @@ This file provides guidance to AI assistants (Claude, GPT, etc.) when working wi
 **AncestorTree** (Gia Phả Điện Tử) is a digital family tree management system for Chi tộc Đặng Đình, Thạch Lâm, Hà Tĩnh.
 
 - **Repository:** https://github.com/Minh-Tam-Solution/AncestorTree
-- **Current Version:** v2.2.1 (Security Patch + Settings)
+- **Current Version:** v2.3.0 (Privacy, Verification & Sub-admin)
 - **SDLC Tier:** LITE (5 stages)
 - **Tech Stack:** Next.js 16, React 19, Tailwind CSS 4, Supabase, Electron 34 (desktop)
 - **Built with:** [TinySDLC](https://github.com/Minh-Tam-Solution/tinysdlc) + [MTS-SDLC-Lite](https://github.com/Minh-Tam-Solution/MTS-SDLC-Lite)
@@ -78,7 +78,7 @@ AncestorTree/
 │   └── 05-test/                    # Testing
 ├── frontend/                       # Next.js application
 │   ├── src/app/                    # App router (route groups)
-│   │   ├── (auth)/                 # Auth pages (login, register, forgot-password, reset-password)
+│   │   ├── (auth)/                 # Auth pages (login, register, forgot-password, reset-password, pending-verification)
 │   │   └── (main)/                 # Main app with sidebar
 │   │       ├── achievements/       # Vinh danh thành tích (Sprint 6)
 │   │       ├── cau-duong/          # Lịch Cầu đường (Sprint 7)
@@ -103,6 +103,7 @@ AncestorTree/
 │   │           └── users/          # QL Người dùng
 │   ├── src/components/             # React components
 │   │   ├── ui/                     # shadcn/ui components
+│   │   ├── auth/                   # Auth components (auth-provider, verification-guard)
 │   │   ├── layout/                 # Layout components (sidebar, header)
 │   │   ├── home/                   # Homepage components (featured-charter)
 │   │   └── people/                 # People components (person-form, family-relations-card)
@@ -127,15 +128,9 @@ AncestorTree/
 │   ├── src/types/                  # TypeScript types
 │   │   └── index.ts                # All type definitions
 │   └── supabase/                   # Database migrations
-│       ├── migrations/             # Timestamped migration files (7)
+│       ├── migrations/             # Timestamped migration files (8)
 │       ├── config.toml             # Supabase CLI config (ports, storage)
 │       └── seed.sql                # Demo data: 18 thành viên 5 đời
-├── desktop/                        # Electron desktop app (Sprint 9)
-│   ├── electron/                   # Main process (main.ts, server.ts, preload.ts)
-│   ├── build/                      # App icons (icns, ico, png)
-│   ├── migrations/                 # SQLite versioned migrations
-│   ├── electron-builder.yml        # Cross-platform build config
-│   └── package.json                # Electron + sql.js deps
 ├── desktop/                        # Electron desktop app (Sprint 9)
 │   ├── electron/
 │   │   ├── main.ts                 # App lifecycle, window, server start
@@ -144,7 +139,9 @@ AncestorTree/
 │   ├── build/                      # App icons (icns, ico, png)
 │   ├── migrations/                 # SQLite versioned migrations
 │   │   ├── 001-initial-schema.sql  # 13 tables (ported from PG)
-│   │   └── 002-seed-demo-data.sql  # Demo: 18 thành viên, 5 đời
+│   │   ├── 002-seed-demo-data.sql  # Demo: 18 thành viên, 5 đời
+│   │   ├── 003-clan-documents.sql  # Kho tài liệu (Sprint 11)
+│   │   └── 004-sprint12-verification.sql  # Verification + privacy (Sprint 12)
 │   ├── electron-builder.yml        # Cross-platform build config
 │   ├── package.json                # Electron + sql.js deps
 │   └── tsconfig.json
@@ -155,7 +152,7 @@ AncestorTree/
 
 ## Database Schema
 
-14 tables across 5 layers:
+14 tables across 5 layers (profiles extended with verification in Sprint 12):
 
 | Layer | Tables | Migration File |
 |-------|--------|----------------|
@@ -278,6 +275,9 @@ chore/upgrade-deps
 | Sprint 7 Migration | `frontend/supabase/migrations/20260224000002_cau_duong_migration.sql` |
 | Security Migration | `frontend/supabase/migrations/20260226000005_security_hardening.sql` |
 | Sprint 11 Migration | `frontend/supabase/migrations/20260227000006_sprint11_kho_tai_lieu.sql` |
+| Sprint 12 Migration | `frontend/supabase/migrations/20260228000008_sprint12_privacy_verification.sql` |
+| Verification Guard | `frontend/src/components/auth/verification-guard.tsx` |
+| Pending Verification | `frontend/src/app/(auth)/pending-verification/page.tsx` |
 | Local Dev Guide | `docs/04-build/LOCAL-DEVELOPMENT.md` |
 | Sprint Plan | `docs/04-build/SPRINT-PLAN.md` |
 | Test Plan | `docs/05-test/TEST-PLAN.md` |
@@ -344,7 +344,8 @@ chore/upgrade-deps
 - `sqlite-storage-shim.ts` routes media to `/api/media/` (local filesystem)
 - Desktop mode is detected via `process.env.NEXT_PUBLIC_DESKTOP_MODE === 'true'`
 - `supabase.ts` conditionally returns shim client in desktop mode
-- `middleware.ts` bypasses auth checks when `DESKTOP_MODE=true`
+- `middleware.ts` bypasses auth checks when `DESKTOP_MODE=true`, enforces `is_verified` for web
+- `verification-guard.tsx` client-side defense-in-depth for unverified users
 - SQLite migrations in `desktop/migrations/` — additive only, `_migrations` version table
 - Desktop DB at `~/AncestorTree/data/ancestortree.db`, media at `~/AncestorTree/media/`
 - Boolean columns: SQLite uses 0/1, API route converts ↔ true/false
@@ -379,6 +380,10 @@ chore/upgrade-deps
 - All desktop API routes MUST call `guardDesktopOnly()` at the top
 - Admin pages require `role === 'admin' || role === 'editor'` check in middleware
 - Contact fields (phone/email/zalo/facebook/address) are PII — never return to unauthenticated users
+- Unverified users (`is_verified = false`) are redirected to `/pending-verification` by middleware
+- Middleware uses `!profile || profile.is_verified !== true` (fail-closed, not fail-open)
+- Sub-admin RLS uses `WITH CHECK` to restrict updates to `is_verified` column only
+- `clan_documents.privacy_level`: 0=public, 1=members, 2=admin+editor only
 
 **Authentication:**
 - Supabase JWT stored in HttpOnly cookies (via `@supabase/ssr`) — never localStorage

@@ -2,8 +2,8 @@
  * @project AncestorTree
  * @file src/app/(main)/admin/documents/page.tsx
  * @description Admin document management — CRUD for Kho tài liệu
- * @version 1.0.0
- * @updated 2026-02-27
+ * @version 1.1.0
+ * @updated 2026-02-28
  */
 
 'use client';
@@ -64,6 +64,7 @@ function DocumentForm({
   const [description, setDescription] = useState(doc?.description || '');
   const [tags, setTags] = useState(doc?.tags || '');
   const [personId, setPersonId] = useState(doc?.person_id || 'none');
+  const [privacyLevel, setPrivacyLevel] = useState(doc?.privacy_level ?? 1);
   const [file, setFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -86,6 +87,7 @@ function DocumentForm({
       file_url: doc?.file_url || '',
       file_type: file?.type || doc?.file_type,
       file_size: file?.size || doc?.file_size,
+      privacy_level: privacyLevel,
     }, file || undefined);
   };
 
@@ -145,6 +147,17 @@ function DocumentForm({
       <div>
         <Label>Tags (phân cách bằng dấu phẩy)</Label>
         <Input value={tags} onChange={e => setTags(e.target.value)} placeholder="nhà thờ, lịch sử, 1960" />
+      </div>
+      <div>
+        <Label>Quyền riêng tư</Label>
+        <Select value={privacyLevel.toString()} onValueChange={v => setPrivacyLevel(parseInt(v))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="0">Công khai (ai cũng xem được)</SelectItem>
+            <SelectItem value="1">Thành viên (đăng nhập mới xem)</SelectItem>
+            <SelectItem value="2">Nội bộ (chỉ quản trị viên)</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       <Button type="submit" disabled={isPending} className="w-full">
         {isPending ? 'Đang lưu...' : (doc ? 'Cập nhật' : 'Tải lên')}
@@ -227,6 +240,7 @@ export default function AdminDocumentsPage() {
           description: data.description,
           tags: data.tags,
           person_id: data.person_id === 'none' ? undefined : data.person_id,
+          privacy_level: data.privacy_level,
         },
       });
       toast.success('Đã cập nhật tài liệu');
@@ -304,6 +318,12 @@ export default function AdminDocumentsPage() {
                         <Badge variant="outline" className="mr-1 text-xs">
                           {DOCUMENT_CATEGORY_LABELS[doc.category]}
                         </Badge>
+                        {doc.privacy_level === 0 && (
+                          <Badge className="mr-1 text-xs bg-green-100 text-green-800">Công khai</Badge>
+                        )}
+                        {doc.privacy_level === 2 && (
+                          <Badge className="mr-1 text-xs bg-red-100 text-red-800">Nội bộ</Badge>
+                        )}
                         {person && <span>{person.display_name} · </span>}
                         {formatFileSize(doc.file_size)}
                         {doc.tags && <span className="ml-1">· {doc.tags}</span>}
