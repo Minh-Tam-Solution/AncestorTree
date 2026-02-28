@@ -1,0 +1,35 @@
+# Build outputs
+.next
+out
+dist
+release
+
+# Dependencies (installed fresh during build)
+node_modules
+
+# Environment secrets
+.env
+.env.local
+.env.*.local
+
+# Editor / OS
+.DS_Store
+*.log
+.vscode
+
+# Git
+.git
+.gitignore
+
+# Tests & dev tooling
+coverage
+__tests__
+*.test.ts
+*.spec.ts
+vitest.config.*
+
+# Electron (not needed in web container)
+../desktop
+
+# Docs
+../docs

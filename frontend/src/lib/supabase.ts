@@ -54,5 +54,9 @@ export function createServiceRoleClient() {
   if (!serviceRoleKey) {
     throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY');
   }
-  return createClient(supabaseUrl, serviceRoleKey);
+  // In Docker, the container cannot resolve NEXT_PUBLIC_SUPABASE_URL if it points to
+  // localhost (which inside Docker = the container itself). Use SUPABASE_INTERNAL_URL
+  // (e.g. http://host.docker.internal:54321) for server-side calls from inside the container.
+  const serverUrl = process.env.SUPABASE_INTERNAL_URL || supabaseUrl;
+  return createClient(serverUrl, serviceRoleKey);
 }

@@ -121,6 +121,23 @@ export async function POST(request: NextRequest) {
     const zipBuffer = zip.toBuffer();
     const filename = `giapha-${new Date().toISOString().slice(0, 10)}.zip`;
 
+    // ── Docker volume persistence (BACKUP_DIR env var) ──────────────────────
+    // When running in Docker, mount a host directory to BACKUP_DIR so backup
+    // ZIPs are persisted on the host filesystem in addition to the download.
+    const backupDir = process.env.BACKUP_DIR;
+    if (backupDir) {
+      try {
+        const fs = await import('fs');
+        const path = await import('path');
+        if (!fs.existsSync(backupDir)) {
+          fs.mkdirSync(backupDir, { recursive: true });
+        }
+        fs.writeFileSync(path.join(backupDir, filename), zipBuffer);
+      } catch {
+        // Non-fatal: still return the download even if disk write fails
+      }
+    }
+
     return new NextResponse(new Uint8Array(zipBuffer), {
       headers: {
         'Content-Type': 'application/zip',

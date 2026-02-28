@@ -1,0 +1,73 @@
+# @project AncestorTree
+# @file docker-compose.yml
+# @description Production Docker Compose — runs the Next.js web app.
+#              Requires Supabase Cloud credentials in .env (copy from .env.docker.example).
+#              Backup ZIPs written to ./docker-data/backups on the host.
+# @version 1.0.0
+# @updated 2026-02-28
+#
+# Quick start:
+#   cp .env.docker.example .env
+#   # fill in SUPABASE credentials in .env
+#   docker compose up -d --build
+#
+# Rebuild without cache (after code changes):
+#   docker compose build --no-cache && docker compose up -d
+
+services:
+  app:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      # Pass NEXT_PUBLIC_* as build args so Next.js bakes them into the JS bundle.
+      # These are read from the .env file on the host at build time.
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_CLAN_NAME: ${NEXT_PUBLIC_CLAN_NAME:-Họ Đặng}
+        NEXT_PUBLIC_CLAN_FULL_NAME: ${NEXT_PUBLIC_CLAN_FULL_NAME:-Họ Đặng làng Kỷ Các}
+    image: ancestortree-web:latest
+    container_name: ancestortree-web
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-4000}:4000"
+
+    environment:
+      # ── Supabase (browser-facing URL already baked into bundle via build.args) ─
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      # Server-side URL used by createServiceRoleClient() inside the container.
+      # host.docker.internal resolves to the Docker host — not accessible from browser.
+      SUPABASE_INTERNAL_URL: ${SUPABASE_INTERNAL_URL:-http://host.docker.internal:54321}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+
+      # ── Backup volume (maps to /data/backups inside container) ───────────────
+      BACKUP_DIR: /data/backups
+
+      # ── Optional clan customization ──────────────────────────────────────────
+      NEXT_PUBLIC_CLAN_NAME: ${NEXT_PUBLIC_CLAN_NAME:-Họ Đặng}
+      NEXT_PUBLIC_CLAN_FULL_NAME: ${NEXT_PUBLIC_CLAN_FULL_NAME:-Họ Đặng làng Kỷ Các}
+
+      # ── Debug / Logging ───────────────────────────────────────────────────────
+      # Set to 'true' to enable — disable in production
+      MIDDLEWARE_LOG: ${MIDDLEWARE_LOG:-false}
+      DEBUG_AUTH: ${DEBUG_AUTH:-false}
+
+    volumes:
+      # ── Backup storage: host path ← → container path ─────────────────────────
+      # Backup ZIPs created via /api/backup are saved here automatically.
+      # Change the left side to any host directory you prefer.
+      - ./docker-data/backups:/data/backups
+
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:4000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

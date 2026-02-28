@@ -1,10 +1,13 @@
 import type { NextConfig } from "next";
 
+// Standalone output required for Electron desktop builds AND Docker production.
+// Web deploys (Vercel) leave this undefined = default SSR behavior.
+const isStandaloneMode =
+  process.env.ELECTRON_BUILD === 'true' ||
+  process.env.DOCKER_BUILD === 'true';
+
 const nextConfig: NextConfig = {
-  // ADR-004: env-conditional standalone output for Electron desktop builds.
-  // Web deploys (Vercel) leave this undefined = default SSR behavior.
-  // Desktop builds set ELECTRON_BUILD=true to produce .next/standalone/.
-  output: process.env.ELECTRON_BUILD ? 'standalone' : undefined,
+  output: isStandaloneMode ? 'standalone' : undefined,
 
   // Ensure sql.js WASM binary is included in standalone output file tracing.
   // Without this, Next.js tree-shaking may exclude the .wasm file.

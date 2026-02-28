@@ -1,8 +1,8 @@
 # Supabase CLI Configuration for AncestorTree Local Development
 # Docs: https://supabase.com/docs/guides/cli/config
 
-[project]
-id = "ancestor-tree-local"
+# Project ID — used to distinguish Supabase projects on the same host
+project_id = "ancestor-tree-local"
 
 [api]
 enabled = true

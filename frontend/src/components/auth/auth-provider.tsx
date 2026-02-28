@@ -21,11 +21,24 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+// Client-side debug logger — enabled via localStorage flag:
+//   localStorage.setItem('ancestortree_debug', 'true')  then reload
+const isDebug = () =>
+  typeof window !== 'undefined' && localStorage.getItem('ancestortree_debug') === 'true';
+
+function authLog(event: string, data?: Record<string, unknown>) {
+  if (!isDebug()) return;
+  console.log(`[Auth] ${event}`, { ts: new Date().toISOString(), ...data });
+}
+
 async function fetchProfile(userId: string): Promise<Profile | null> {
   try {
-    return await getProfile(userId);
+    authLog('fetchProfile:start', { userId });
+    const profile = await getProfile(userId);
+    authLog('fetchProfile:done', { userId, role: profile?.role });
+    return profile;
   } catch (error) {
-    console.error('Error fetching profile:', error);
+    console.error('[Auth] fetchProfile:error', error);
     return null;
   }
 }
@@ -44,7 +57,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Initial session check + profile fetch
+    authLog('getSession:start');
     supabase.auth.getSession().then(async ({ data: { session: s } }) => {
+      authLog('getSession:done', { userId: s?.user?.id ?? null, hasSession: !!s });
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
@@ -56,7 +71,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, s) => {
+      async (event, s) => {
+        authLog('onAuthStateChange', { event, userId: s?.user?.id ?? null });
         setSession(s);
         setUser(s?.user ?? null);
 
@@ -73,8 +89,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    authLog('signIn:start', { email });
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    if (error) {
+      authLog('signIn:error', { message: error.message });
+      throw error;
+    }
+    authLog('signIn:success');
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {

@@ -25,7 +25,10 @@ export default function LoginPage() {
     try {
       await signIn(email, password);
       toast.success('Đăng nhập thành công!');
-      router.push('/');
+      // Use full page navigation (not router.push) to ensure the browser sends
+      // fresh auth cookies in the next request. router.push can serve a cached
+      // response from before login, causing the middleware to see no auth cookie.
+      window.location.replace('/');
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Đăng nhập thất bại';
       toast.error(message);
@@ -43,7 +46,7 @@ export default function LoginPage() {
           </div>
           <CardTitle>Đăng nhập</CardTitle>
           <CardDescription>
-            Đăng nhập vào Gia Phả Điện Tử - {CLAN_FULL_NAME}
+            Cổng thông tin gia phả
           </CardDescription>
         </CardHeader>
         <CardContent>
