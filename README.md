@@ -77,6 +77,17 @@ Phần mềm quản lý gia phả điện tử giúp gìn giữ và truyền th�
 - **API docs** - Tài liệu API endpoints đầy đủ cho 14 bảng + Auth + Storage
 - **Secure coding review** - OWASP Top 10 + ASVS Level 1 audit
 
+### Privacy & Verification (v2.3)
+
+- **Xác nhận thành viên** - Admin duyệt tài khoản mới trước khi cho truy cập
+- **Sub-admin** - Editor được cấp quyền xác nhận thành viên trong nhánh phụ trách
+- **Hạn chế Viewer** - Viewer không thấy thông tin liên lạc, chỉ xem tên và cây gia phả
+- **Quyền riêng tư tài liệu** - 3 cấp: Công khai / Thành viên / Nội bộ (admin+editor)
+- **Email xác nhận** - Đăng ký cần verify email trước khi đăng nhập
+- **Trang chờ xác nhận** - `/pending-verification` cho tài khoản chưa được duyệt
+- **Middleware fail-closed** - Lỗi/timeout → chặn truy cập (không fail-open)
+- **Client-side guard** - VerificationGuard trong layout bảo vệ client-side navigation
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -179,7 +190,8 @@ AncestorTree/
 │           ├── 20260224000004_storage_setup.sql
 │           ├── 20260226000005_security_hardening.sql
 │           ├── 20260227000006_sprint11_kho_tai_lieu.sql
-│           └── 20260227000007_storage_update_mime_types.sql
+│           ├── 20260227000007_storage_update_mime_types.sql
+│           └── 20260228000008_sprint12_privacy_verification.sql
 ├── desktop/                        # Electron desktop app (Sprint 9)
 │   ├── electron/                   # Main process (main.ts, server.ts, preload.ts)
 │   ├── build/                      # App icons (icns, ico, png)
@@ -232,8 +244,9 @@ v1.6.0 LocalDev  [##########] Done - Supabase CLI + Docker local mode
 v1.7.0 Security  [##########] Done - RLS hardening + middleware fix + privacy defaults
 v1.8.0 Desktop   [##########] Done - Electron + sql.js standalone desktop app
 v2.1.0 Landing   [##########] Done - Landing page + community docs + SEO
-v2.2.1 Security  [##########] Done - Security patch + Clan name config + Settings page
 v2.2.0 Documents [##########] Done - Kho tài liệu + In-App Help guide
+v2.2.1 Security  [##########] Done - Security patch + Clan name config + Settings page
+v2.3.0 Privacy   [##########] Done - Xác nhận thành viên + Sub-admin + Privacy controls
 v3.0.0 Community [----------] Future - Nhà thờ họ, Notifications, Cross-clan
 ```
 
