@@ -12,6 +12,7 @@ import { randomUUID } from 'crypto';
 /** Columns that are BOOLEAN in PostgreSQL but INTEGER 0/1 in SQLite */
 const BOOLEAN_COLUMNS: Record<string, Set<string>> = {
   people: new Set(['is_living', 'is_patrilineal']),
+  profiles: new Set(['is_verified', 'can_verify_members', 'is_suspended']),
   events: new Set(['recurring']),
   media: new Set(['is_primary']),
   achievements: new Set(['is_featured']),

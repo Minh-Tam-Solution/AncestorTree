@@ -2,16 +2,16 @@
  * @project AncestorTree
  * @file src/app/(landing)/welcome/page.tsx
  * @description Public landing page — 9 sections, Vietnamese-first, SSR static
- * @version 1.0.0
- * @updated 2026-02-26
+ * @version 2.3.0
+ * @updated 2026-03-01
  */
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import {
-  GitBranch, Calendar, Users, Shield, Download, Bug, LogIn,
+  GitBranch, Calendar, Users, Shield, Bug, LogIn,
   Lightbulb, MessageCircle, Code2, Heart,
-  Monitor, Apple, ChevronRight, Award, BookOpen, Utensils,
+  ChevronRight, Award, BookOpen, Utensils, Clock, Rocket,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -118,7 +118,7 @@ export default function WelcomePage() {
         </div>
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32 text-center">
           <Badge variant="secondary" className="mb-6 text-sm px-4 py-1">
-            Open Source &middot; MIT License &middot; v2.1.0
+            Open Source &middot; MIT License &middot; v2.3.0
           </Badge>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-4">
             Gia Phả Điện Tử
@@ -128,9 +128,9 @@ export default function WelcomePage() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" variant="secondary" asChild>
-              <a href="#download">
-                <Download className="mr-2 h-5 w-5" />
-                Tải về máy tính
+              <a href="#quickstart">
+                <Rocket className="mr-2 h-5 w-5" />
+                Bắt đầu ngay
               </a>
             </Button>
             <Button size="lg" className="bg-white/10 border border-white/30 text-white hover:bg-white/20" asChild>
@@ -326,71 +326,57 @@ export default function WelcomePage() {
         </div>
       </section>
 
-      {/* ───── 5. Download ───── */}
-      <section id="download" className="py-20">
+      {/* ───── 5. Quickstart ───── */}
+      <section id="quickstart" className="py-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <h2 className="text-3xl font-bold text-gray-900 mb-3">Tải về Desktop</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">Bắt đầu nhanh</h2>
             <p className="text-gray-500">
-              Sử dụng offline — không cần internet, dữ liệu lưu trên máy tính cá nhân.
+              Chạy ngay trên máy tính — chỉ cần Docker Desktop và 10 phút.
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
-            {/* Windows */}
-            <Card className="text-center">
-              <CardHeader>
-                <div className="mx-auto w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center mb-2">
-                  <Monitor className="h-6 w-6 text-blue-600" />
-                </div>
-                <CardTitle className="text-lg">Windows</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Badge className="bg-emerald-100 text-emerald-700">v2.1.0</Badge>
-                <p className="text-sm text-gray-500">Windows 10 trở lên &middot; .exe installer</p>
-                <Button className="w-full" asChild>
-                  <a href={`${GITHUB_RELEASES}/download/v2.1.0/AncestorTree.Setup.2.1.0.exe`}>
-                    <Download className="mr-2 h-4 w-4" />
-                    Tải AncestorTree.exe
-                  </a>
-                </Button>
-              </CardContent>
-            </Card>
 
-            {/* macOS */}
-            <Card className="text-center">
+          {/* Local Dev quickstart */}
+          <div className="max-w-2xl mx-auto mb-10">
+            <Card>
               <CardHeader>
-                <div className="mx-auto w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-2">
-                  <Apple className="h-6 w-6 text-gray-700" />
-                </div>
-                <CardTitle className="text-lg">macOS</CardTitle>
+                <CardTitle className="text-lg text-center">Local Development</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <Badge className="bg-emerald-100 text-emerald-700">v2.1.0</Badge>
-                <p className="text-sm text-gray-500">macOS 12+ &middot; Intel &amp; Apple Silicon</p>
-                <div className="flex gap-2">
-                  <Button className="flex-1" size="sm" asChild>
-                    <a href={`${GITHUB_RELEASES}/download/v2.1.0/AncestorTree-2.1.0-arm64.dmg`}>
-                      <Download className="mr-1 h-4 w-4" />
-                      Apple Silicon
-                    </a>
-                  </Button>
-                  <Button className="flex-1" size="sm" variant="outline" asChild>
-                    <a href={`${GITHUB_RELEASES}/download/v2.1.0/AncestorTree-2.1.0.dmg`}>
-                      <Download className="mr-1 h-4 w-4" />
-                      Intel
-                    </a>
-                  </Button>
+              <CardContent className="space-y-4">
+                <div className="bg-gray-900 text-gray-100 rounded-lg p-4 font-mono text-sm leading-relaxed">
+                  <p className="text-gray-400"># Clone &amp; chạy (cần Docker Desktop + pnpm)</p>
+                  <p>git clone {GITHUB_REPO}.git</p>
+                  <p>cd AncestorTree/frontend</p>
+                  <p>pnpm install &amp;&amp; pnpm local:setup &amp;&amp; pnpm dev</p>
+                </div>
+                <div className="text-center space-y-1">
+                  <p className="text-sm text-gray-600">
+                    Mở <span className="font-mono text-emerald-700">http://localhost:4000</span> — Đăng nhập: <span className="font-mono">admin@giapha.local</span> / <span className="font-mono">admin123</span>
+                  </p>
+                  <p className="text-xs text-gray-400">Chi phí: $0 &middot; Thời gian: ~10 phút &middot; Đầy đủ 100% tính năng</p>
                 </div>
               </CardContent>
             </Card>
           </div>
-          <p className="text-center text-sm text-gray-400 mt-6">
-            Ứng dụng chưa được ký code (unsigned). macOS: System Settings &rarr; Privacy &amp; Security &rarr; Allow.
-            Windows: SmartScreen &rarr; More info &rarr; Run anyway.{' '}
-            <a href={GITHUB_RELEASES} target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">
-              Tất cả phiên bản
-            </a>.
-          </p>
+
+          {/* Desktop notice */}
+          <div className="max-w-2xl mx-auto">
+            <Card className="border-amber-200 bg-amber-50/50">
+              <CardContent className="pt-6 text-center space-y-3">
+                <div className="mx-auto w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                  <Clock className="h-5 w-5 text-amber-600" />
+                </div>
+                <h3 className="font-semibold text-gray-900">Desktop App — Code Signing Pending</h3>
+                <p className="text-sm text-gray-600">
+                  Bản Desktop (offline, không cần Docker) đang chờ Apple Developer Certificate.
+                  Khi code signing sẵn sàng, bản cài đặt sẽ được phát hành tại{' '}
+                  <a href={GITHUB_RELEASES} target="_blank" rel="noopener noreferrer" className="underline text-emerald-700 hover:text-emerald-800">
+                    GitHub Releases
+                  </a>.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </section>
 
@@ -550,7 +536,7 @@ export default function WelcomePage() {
             <div className="flex items-center gap-2">
               <span className="text-lg">🌳</span>
               <span className="font-semibold text-gray-700">AncestorTree</span>
-              <span className="text-gray-400">v2.1.0</span>
+              <span className="text-gray-400">v2.3.0</span>
             </div>
             <div className="flex items-center gap-4">
               <a href={GITHUB_REPO} target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">

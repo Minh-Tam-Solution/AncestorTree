@@ -2,8 +2,8 @@
 project: AncestorTree
 path: docs/04-build/USER-GUIDE.md
 type: user-guide
-version: 1.8.0
-updated: 2026-02-26
+version: 2.3.0
+updated: 2026-03-01
 owner: dev-team
 status: approved
 ---
@@ -28,8 +28,9 @@ Hướng dẫn sử dụng chi tiết cho ứng dụng quản lý gia phả đi�
 10. [Hương ước gia tộc](#10-hương-ước-gia-tộc)
 11. [Cầu đương](#11-cầu-đương)
 12. [Gia phả sách](#12-gia-phả-sách)
-13. [Quản trị (Admin)](#13-quản-trị-admin)
-14. [Sao lưu & Khôi phục](#14-sao-lưu--khôi-phục)
+13. [Kho tài liệu](#13-kho-tài-liệu)
+14. [Quản trị (Admin)](#14-quản-trị-admin)
+15. [Sao lưu & Khôi phục](#15-sao-lưu--khôi-phục)
 
 ---
 
@@ -286,21 +287,46 @@ Cầu đương là phong tục phân công trách nhiệm lo việc cúng giỗ,
 
 ---
 
-## 13. Quản trị (Admin)
+## 13. Kho tài liệu
+
+### Xem tài liệu
+
+- Vào **Tài liệu** → **Kho tài liệu** từ thanh điều hướng
+- Hiển thị dạng gallery với ảnh thumbnail
+- Lọc theo danh mục: Ảnh lịch sử, Giấy tờ, Bản đồ, Video, Bài viết, Khác
+- Tìm kiếm theo tiêu đề
+
+### Quản lý tài liệu (Admin/Editor)
+
+1. Vào **Quản trị** → **Tài liệu**
+2. Nhấn **Thêm tài liệu**
+3. Điền thông tin:
+   - **Tiêu đề** (bắt buộc)
+   - **Danh mục:** Ảnh lịch sử, Giấy tờ, Bản đồ, Video, Bài viết, Khác
+   - **Mô tả**
+   - **File đính kèm** — upload ảnh, PDF, video (tối đa 10MB)
+   - **Thành viên liên quan** — gắn thẻ thành viên trong gia phả
+   - **Quyền riêng tư:** Công khai / Thành viên / Nội bộ (admin+editor)
+4. Nhấn **Lưu**
+
+---
+
+## 14. Quản trị (Admin)
 
 > Chỉ hiển thị cho tài khoản có quyền Admin hoặc Editor.
 
 ### Các chức năng quản trị
 
 | Mục | Chức năng |
-|-----|-----------|
-| **Người dùng** | Quản lý tài khoản, phân quyền |
+| ----- | --------- |
+| **Người dùng** | Quản lý tài khoản, phân quyền, xác nhận, tạm khóa |
 | **Vinh danh** | Thêm/sửa/xóa thành tích |
 | **Quỹ khuyến học** | Thu chi, cấp học bổng |
 | **Hương ước** | Quản lý bài viết |
 | **Cầu đương** | Tạo đợt phân công |
 | **Đóng góp** | Duyệt đóng góp từ thành viên |
-| **Cài đặt** | Cấu hình hệ thống |
+| **Tài liệu** | Upload/quản lý kho tài liệu dòng họ |
+| **Cài đặt** | Cấu hình tên dòng họ, thông tin hệ thống |
 
 ### Phân quyền
 
@@ -313,9 +339,20 @@ Cầu đương là phong tục phân công trách nhiệm lo việc cúng giỗ,
 
 > **Lưu ý cho bản Desktop:** Bạn tự động là Admin — toàn quyền quản lý dữ liệu trên máy.
 
+### Xác nhận thành viên (v2.3)
+
+Khi có người đăng ký tài khoản mới, Admin cần xác nhận trước khi cho truy cập:
+
+1. Vào **Quản trị** → **Người dùng**
+2. Tài khoản chưa xác nhận sẽ có nhãn "Chưa xác nhận"
+3. Nhấn **Xác nhận** để duyệt tài khoản
+4. Tài khoản bị vi phạm có thể **Tạm khóa** hoặc **Xóa**
+
+> Admin và Editor được tự động xác nhận — không cần duyệt lẫn nhau.
+
 ---
 
-## 14. Sao lưu & Khôi phục
+## 15. Sao lưu & Khôi phục
 
 ### Sao lưu dữ liệu
 

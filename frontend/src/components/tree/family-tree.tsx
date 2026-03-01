@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useMemo, useState, useRef, useCallback } from 'react';
+import { useMemo, useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTreeData } from '@/hooks/use-families';
 import { Card, CardContent } from '@/components/ui/card';
@@ -51,6 +51,7 @@ const NODE_WIDTH = 120;
 const NODE_HEIGHT = 80;
 const LEVEL_HEIGHT = 140;
 const SIBLING_GAP = 20;
+const BRANCH_GAP = 60; // wider gap between siblings whose subtrees have children
 const MINIMAP_WIDTH = 160;
 const MINIMAP_HEIGHT = 100;
 
@@ -376,7 +377,7 @@ function buildTreeLayout(
     const result: string[] = [];
     for (const fam of fams) {
       children
-        .filter((c) => c.family_id === fam.id && visibleIds.has(c.person_id))
+        .filter((c) => c.family_id === fam.id && visibleIds.has(c.person_id) && !positionedAsWife.has(c.person_id))
         .sort((a, b) => a.sort_order - b.sort_order)
         .forEach((c) => { if (!result.includes(c.person_id)) result.push(c.person_id); });
     }
@@ -412,6 +413,13 @@ function buildTreeLayout(
     }
   }
 
+  // Gap between adjacent siblings — larger when at least one has a visible subtree
+  const siblingGap = (childA: string, childB: string): number => {
+    const aHasKids = !collapsedNodes.has(childA) && getVisibleChildrenAsFather(childA).length > 0;
+    const bHasKids = !collapsedNodes.has(childB) && getVisibleChildrenAsFather(childB).length > 0;
+    return (aHasKids || bHasKids) ? BRANCH_GAP : SIBLING_GAP;
+  };
+
   // Bottom-up: subtree widths
   const subtreeWidths = new Map<string, number>();
   const computeSubtreeWidth = (personId: string): number => {
@@ -419,9 +427,15 @@ function buildTreeLayout(
     const wife = getVisibleWife(personId);
     const visChildren = collapsedNodes.has(personId) ? [] : getVisibleChildrenAsFather(personId);
     const coupleWidth = NODE_WIDTH + (wife ? COUPLE_GAP + NODE_WIDTH : 0);
-    const childrenWidth = visChildren.length > 0
-      ? visChildren.reduce((s, c) => s + computeSubtreeWidth(c), 0) + (visChildren.length - 1) * SIBLING_GAP
-      : 0;
+    let childrenWidth = 0;
+    if (visChildren.length > 0) {
+      for (let i = 0; i < visChildren.length; i++) {
+        childrenWidth += computeSubtreeWidth(visChildren[i]);
+        if (i < visChildren.length - 1) {
+          childrenWidth += siblingGap(visChildren[i], visChildren[i + 1]);
+        }
+      }
+    }
     const result = Math.max(coupleWidth, childrenWidth);
     subtreeWidths.set(personId, result);
     return result;
@@ -444,12 +458,20 @@ function buildTreeLayout(
 
     // Children spread centered under couple
     if (visChildren.length > 0) {
-      const totalChildW = visChildren.reduce((s, c) => s + (subtreeWidths.get(c) || NODE_WIDTH), 0)
-        + (visChildren.length - 1) * SIBLING_GAP;
+      let totalChildW = 0;
+      for (let i = 0; i < visChildren.length; i++) {
+        totalChildW += (subtreeWidths.get(visChildren[i]) || NODE_WIDTH);
+        if (i < visChildren.length - 1) {
+          totalChildW += siblingGap(visChildren[i], visChildren[i + 1]);
+        }
+      }
       let childX = centerX - totalChildW / 2;
-      for (const child of visChildren) {
-        assignPositions(child, childX);
-        childX += (subtreeWidths.get(child) || NODE_WIDTH) + SIBLING_GAP;
+      for (let i = 0; i < visChildren.length; i++) {
+        assignPositions(visChildren[i], childX);
+        childX += (subtreeWidths.get(visChildren[i]) || NODE_WIDTH);
+        if (i < visChildren.length - 1) {
+          childX += siblingGap(visChildren[i], visChildren[i + 1]);
+        }
       }
     }
   };
@@ -568,6 +590,33 @@ export function FamilyTree() {
   const [filterSearch, setFilterSearch] = useState('');
   const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
 
+  // Auto-collapse: for large trees (>50 people), collapse gen 3+ on first load
+  const autoCollapseApplied = useRef(false);
+  useEffect(() => {
+    if (!data || autoCollapseApplied.current) return;
+    if (data.people.length <= 50) return;
+    autoCollapseApplied.current = true;
+
+    const minGen = Math.min(...data.people.map(p => p.generation || 1));
+    const collapseFromGen = minGen + 2; // gen 3+ (relative)
+
+    const fathersWithChildren = new Set<string>();
+    for (const family of data.families) {
+      if (family.father_id && data.children.some(c => c.family_id === family.id)) {
+        fathersWithChildren.add(family.father_id);
+      }
+    }
+
+    const toCollapse = new Set<string>();
+    for (const person of data.people) {
+      if (person.generation >= collapseFromGen && fathersWithChildren.has(person.id)) {
+        toCollapse.add(person.id);
+      }
+    }
+
+    if (toCollapse.size > 0) setCollapsedNodes(toCollapse);
+  }, [data]);
+
   const handleSetFilterRoot = useCallback((person: Person | null) => {
     setFilterRootId(person?.id ?? null);
     setFilterSearch('');
@@ -627,6 +676,28 @@ export function FamilyTree() {
       return next;
     });
   }, []);
+
+  const handleExpandAll = useCallback(() => {
+    setCollapsedNodes(new Set());
+  }, []);
+
+  const handleCollapseAll = useCallback(() => {
+    if (!data) return;
+    const minGen = Math.min(...data.people.map(p => p.generation || 1));
+    const fathersWithChildren = new Set<string>();
+    for (const family of data.families) {
+      if (family.father_id && data.children.some(c => c.family_id === family.id)) {
+        fathersWithChildren.add(family.father_id);
+      }
+    }
+    const toCollapse = new Set<string>();
+    for (const person of data.people) {
+      if (person.generation > minGen && fathersWithChildren.has(person.id)) {
+        toCollapse.add(person.id);
+      }
+    }
+    setCollapsedNodes(toCollapse);
+  }, [data]);
 
   // Pan handlers
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -861,6 +932,18 @@ export function FamilyTree() {
             </SelectItem>
           </SelectContent>
         </Select>
+
+        {/* Expand / Collapse all */}
+        <div className="flex items-center gap-1 border rounded-lg p-1">
+          <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={handleExpandAll}>
+            <ChevronDown className="h-3 w-3 mr-1" />
+            Mở rộng
+          </Button>
+          <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={handleCollapseAll}>
+            <ChevronRight className="h-3 w-3 mr-1" />
+            Thu gọn
+          </Button>
+        </div>
 
         {/* Toggle minimap */}
         <Button

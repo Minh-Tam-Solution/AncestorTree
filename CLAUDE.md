@@ -3,7 +3,7 @@ project: AncestorTree
 path: CLAUDE.md
 type: agent-guidelines
 version: 2.3.0
-updated: 2026-02-28
+updated: 2026-03-01
 ---
 
 # CLAUDE.md
@@ -15,7 +15,7 @@ This file provides guidance to AI assistants (Claude, GPT, etc.) when working wi
 **AncestorTree** (Gia Phả Điện Tử) is a digital family tree management system for Chi tộc Đặng Đình, Thạch Lâm, Hà Tĩnh.
 
 - **Repository:** https://github.com/Minh-Tam-Solution/AncestorTree
-- **Current Version:** v2.3.0 (Privacy, Verification & Sub-admin)
+- **Current Version:** v2.3.0 (Privacy, Verification & Clan Settings)
 - **SDLC Tier:** LITE (5 stages)
 - **Tech Stack:** Next.js 16, React 19, Tailwind CSS 4, Supabase, Electron 34 (desktop)
 - **Built with:** [TinySDLC](https://github.com/Minh-Tam-Solution/tinysdlc) + [MTS-SDLC-Lite](https://github.com/Minh-Tam-Solution/MTS-SDLC-Lite)
@@ -115,7 +115,8 @@ AncestorTree/
 │   │   ├── use-events.ts           # Event hooks (Sprint 4)
 │   │   ├── use-families.ts         # Family relations hooks (Sprint 7.5)
 │   │   ├── use-documents.ts        # Document CRUD hooks (Sprint 11)
-│   │   └── use-fund.ts             # Fund & scholarship hooks (Sprint 6)
+│   │   ├── use-fund.ts             # Fund & scholarship hooks (Sprint 6)
+│   │   └── use-profiles.ts         # User management hooks (Sprint 12)
 │   ├── src/lib/                    # Utilities, Supabase client
 │   │   ├── supabase.ts             # Supabase client init
 │   │   ├── supabase-data.ts        # Core data layer (people, families)
@@ -128,8 +129,8 @@ AncestorTree/
 │   ├── src/types/                  # TypeScript types
 │   │   └── index.ts                # All type definitions
 │   └── supabase/                   # Database migrations
-│       ├── migrations/             # Timestamped migration files (8)
-│       ├── config.toml             # Supabase CLI config (ports, storage)
+│       ├── migrations/             # Timestamped migration files (11)
+│       ├── config.toml             # Supabase CLI config (ports, storage, SMTP)
 │       └── seed.sql                # Demo data: 18 thành viên 5 đời
 ├── desktop/                        # Electron desktop app (Sprint 9)
 │   ├── electron/
@@ -152,7 +153,7 @@ AncestorTree/
 
 ## Database Schema
 
-14 tables across 5 layers (profiles extended with verification in Sprint 12):
+15 tables across 6 layers (profiles extended with verification in Sprint 12):
 
 | Layer | Tables | Migration File |
 |-------|--------|----------------|
@@ -161,6 +162,7 @@ AncestorTree/
 | **Culture (v1.3)** | `achievements`, `fund_transactions`, `scholarships`, `clan_articles` | `sprint6-migration.sql` |
 | **Ceremony (v1.4)** | `cau_duong_pools`, `cau_duong_assignments` | `cau-duong-migration.sql` |
 | **Documents (v2.2)** | `clan_documents` | `sprint11-kho-tai-lieu.sql` |
+| **Settings (v2.3)** | `clan_settings` | `clan-settings.sql` |
 
 All tables have RLS policies with 4 roles: `admin`, `editor`, `viewer`, `guest`.
 
@@ -276,6 +278,8 @@ chore/upgrade-deps
 | Security Migration | `frontend/supabase/migrations/20260226000005_security_hardening.sql` |
 | Sprint 11 Migration | `frontend/supabase/migrations/20260227000006_sprint11_kho_tai_lieu.sql` |
 | Sprint 12 Migration | `frontend/supabase/migrations/20260228000008_sprint12_privacy_verification.sql` |
+| User Management Migration | `frontend/supabase/migrations/20260228000009_user_management.sql` |
+| Clan Settings Migration | `frontend/supabase/migrations/20260301000010_clan_settings.sql` |
 | Verification Guard | `frontend/src/components/auth/verification-guard.tsx` |
 | Pending Verification | `frontend/src/app/(auth)/pending-verification/page.tsx` |
 | Local Dev Guide | `docs/04-build/LOCAL-DEVELOPMENT.md` |
@@ -344,7 +348,11 @@ chore/upgrade-deps
 - `sqlite-storage-shim.ts` routes media to `/api/media/` (local filesystem)
 - Desktop mode is detected via `process.env.NEXT_PUBLIC_DESKTOP_MODE === 'true'`
 - `supabase.ts` conditionally returns shim client in desktop mode
-- `middleware.ts` bypasses auth checks when `DESKTOP_MODE=true`, enforces `is_verified` for web
+- `proxy.ts` (renamed from `middleware.ts` for Next.js 16) handles auth + verification
+- `middleware.ts` re-exports `proxy` as `middleware` per Next.js convention
+- Middleware bypasses auth when `DESKTOP_MODE=true`, enforces `is_verified` for web
+- Admin/editor accounts bypass verification check — they ARE the verifiers
+- Fallback query pattern: if Sprint 12 columns missing, falls back to `select('role')` only
 - `verification-guard.tsx` client-side defense-in-depth for unverified users
 - SQLite migrations in `desktop/migrations/` — additive only, `_migrations` version table
 - Desktop DB at `~/AncestorTree/data/ancestortree.db`, media at `~/AncestorTree/media/`

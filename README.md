@@ -104,13 +104,9 @@ Phần mềm quản lý gia phả điện tử giúp gìn giữ và truyền th�
 
 ### Option A: Desktop App (dành cho người dùng phổ thông)
 
-> Không cần cài gì thêm — tải về, cài đặt, dùng ngay.
-
-1. Tải file cài đặt từ [GitHub Releases](https://github.com/Minh-Tam-Solution/AncestorTree/releases):
-   - **macOS:** `AncestorTree-x.x.x.dmg` (Intel) hoặc `AncestorTree-x.x.x-arm64.dmg` (Apple Silicon)
-   - **Windows:** `AncestorTree-Setup-x.x.x.exe`
-2. Cài đặt và mở ứng dụng
-3. Dữ liệu demo 18 thành viên sẵn sàng
+> **Code Signing Pending** — Bản desktop đang chờ Apple Developer Certificate.
+> Khi có code sign, bản cài đặt sẽ được phát hành tại [GitHub Releases](https://github.com/Minh-Tam-Solution/AncestorTree/releases).
+> Hiện tại, vui lòng sử dụng Option B hoặc C.
 
 See [docs/04-build/INSTALLATION-GUIDE.md](./docs/04-build/INSTALLATION-GUIDE.md) for detailed instructions.
 
@@ -191,7 +187,9 @@ AncestorTree/
 │           ├── 20260226000005_security_hardening.sql
 │           ├── 20260227000006_sprint11_kho_tai_lieu.sql
 │           ├── 20260227000007_storage_update_mime_types.sql
-│           └── 20260228000008_sprint12_privacy_verification.sql
+│           ├── 20260228000008_sprint12_privacy_verification.sql
+│           ├── 20260228000009_user_management.sql
+│           └── 20260301000010_clan_settings.sql
 ├── desktop/                        # Electron desktop app (Sprint 9)
 │   ├── electron/                   # Main process (main.ts, server.ts, preload.ts)
 │   ├── build/                      # App icons (icns, ico, png)
@@ -205,7 +203,7 @@ AncestorTree/
 
 ## Database
 
-14 tables across 5 layers:
+15 tables across 6 layers:
 
 | Layer | Tables | Description |
 |-------|--------|-------------|
@@ -214,6 +212,7 @@ AncestorTree/
 | Culture (v1.3) | `achievements`, `fund_transactions`, `scholarships`, `clan_articles` | Vinh danh, quỹ, hương ước |
 | Ceremony (v1.4) | `cau_duong_pools`, `cau_duong_assignments` | Phân công cầu đương lễ, tết |
 | Documents (v2.2) | `clan_documents` | Kho tài liệu dòng họ |
+| Settings (v2.3) | `clan_settings` | Cấu hình tên dòng họ |
 
 All tables have Row Level Security (RLS) policies with 4 roles.
 
@@ -254,14 +253,19 @@ v3.0.0 Community [----------] Future - Nhà thờ họ, Notifications, Cross-cla
 
 AncestorTree is designed for **any Vietnamese family**:
 
-### Cách nhanh nhất (Desktop App)
+### Cách nhanh nhất (Local Development)
 
-1. Tải file cài đặt từ [GitHub Releases](https://github.com/Minh-Tam-Solution/AncestorTree/releases)
-2. Cài đặt → Mở ứng dụng → Bắt đầu nhập dữ liệu
+```bash
+git clone https://github.com/Minh-Tam-Solution/AncestorTree.git
+cd AncestorTree/frontend
+pnpm install && pnpm local:setup && pnpm dev
+```
 
-Tổng thời gian: **5 phút**. Chi phí: **$0**.
+Login: `admin@giapha.local` / `admin123` — Tổng thời gian: **10 phút**. Chi phí: **$0**.
 
-### Cách nâng cao (Web App)
+> Desktop App (offline, không cần Docker) sẽ có khi code signing certificate sẵn sàng.
+
+### Cách nâng cao (Web App — Deploy cho cả dòng họ)
 
 1. Fork this repo
 2. Create a free Supabase project

@@ -29,6 +29,16 @@ enable_signup = true
 double_confirm_changes = false
 enable_confirmations = true
 
+# SMTP — send real verification emails via Gmail
+# Env vars defined in .env.local (see .env.local.example)
+[auth.email.smtp]
+host = "env(SMTP_HOST)"
+port = 587
+user = "env(SMTP_USER)"
+pass = "env(SMTP_PASS)"
+admin_email = "env(SMTP_SENDER_EMAIL)"
+sender_name = "env(SMTP_SENDER_NAME)"
+
 [auth.mfa]
 max_enrolled_factors = 10
 

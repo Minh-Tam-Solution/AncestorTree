@@ -178,14 +178,31 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Fetch profile for verification + role checks (single query)
+  // Fetch profile for verification + role checks
+  // Try full query first; fall back to role-only if Sprint 12 columns not yet migrated
   if (user && (authRequiredPaths.some(path => pathname.startsWith(path)) || pathname === pendingVerificationPath)) {
     try {
-      const { data: profile } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let profile: Record<string, any> | null = null;
+
+      const { data, error } = await supabase
         .from('profiles')
         .select('role, is_verified, is_suspended')
         .eq('user_id', user.id)
         .single();
+
+      if (error && !data) {
+        // Sprint 12 columns may not exist yet — fall back to role-only query
+        mwLog('WARN', 'profile_fallback', { pathname, error: error.message });
+        const { data: fallback } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
+        profile = fallback;
+      } else {
+        profile = data;
+      }
 
       // Suspended users are blocked immediately (ISS-01: defense-in-depth)
       if (profile?.is_suspended === true) {
@@ -194,8 +211,9 @@ export async function proxy(request: NextRequest) {
       }
 
       // Unverified users can only access /pending-verification (and sign out)
+      // Admin and editor accounts bypass verification — they ARE the verifiers
       // Use !== true (not === false) so null/missing profile also blocks access (ISS-03)
-      if (!profile || profile.is_verified !== true) {
+      if (!profile || (profile.is_verified !== true && profile.role !== 'admin' && profile.role !== 'editor')) {
         if (pathname !== pendingVerificationPath) {
           mwLog('WARN', 'redirect', { pathname, destination: pendingVerificationPath, reason: 'unverified', userId: user.id });
           return NextResponse.redirect(new URL(pendingVerificationPath, request.url));
