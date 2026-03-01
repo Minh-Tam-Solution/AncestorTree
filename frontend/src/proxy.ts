@@ -246,8 +246,13 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
-  // Redirect unauthenticated users from protected pages to login
+  // Redirect unauthenticated users from protected pages
   if (!user && authRequiredPaths.some(path => pathname.startsWith(path))) {
+    // Root path → landing page (not login) so visitors can see what the app is about
+    if (pathname === '/') {
+      mwLog('INFO', 'redirect', { pathname, destination: '/welcome', reason: 'unauthenticated_root' });
+      return NextResponse.redirect(new URL('/welcome', request.url));
+    }
     mwLog('WARN', 'redirect', { pathname, destination: '/login', reason: 'unauthenticated', authMethod });
     return NextResponse.redirect(new URL('/login', request.url));
   }
