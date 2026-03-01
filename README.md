@@ -88,6 +88,16 @@ Phần mềm quản lý gia phả điện tử giúp gìn giữ và truyền th�
 - **Middleware fail-closed** - Lỗi/timeout → chặn truy cập (không fail-open)
 - **Client-side guard** - VerificationGuard trong layout bảo vệ client-side navigation
 
+### Hồ sơ, MFA & Sao lưu (v2.4)
+
+- **Hồ sơ tài khoản** - `/settings/profile`: xem & sửa tên hiển thị, đổi mật khẩu, avatar
+- **Bảo mật MFA (TOTP)** - `/settings/security`: bật/tắt Google Authenticator, quét QR, nhập OTP 6 số
+- **Sao lưu & Phục hồi** - `/admin/backup`: xuất 13 bảng ra ZIP, nhập lại 1-click, tự động lịch sao lưu
+- **Quản lý tài khoản nâng cao** - Admin khoá/mở khoá, xoá tài khoản vĩnh viễn, duyệt xác nhận
+- **Cài đặt dòng họ (động)** - Sửa tên, năm thành lập, nguồn gốc trực tiếp trong admin (không cần env vars)
+- **Rate limiting** - Giới hạn đăng nhập/đăng ký (20/phút login, 10/phút register, 6/5 phút forgot-password)
+- **Docker** - Dockerfile + docker-compose.yml, 1 lệnh `docker compose up` là chạy
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -128,7 +138,19 @@ Demo login: `admin@giapha.local` / `admin123`
 
 See [docs/04-build/LOCAL-DEVELOPMENT.md](./docs/04-build/LOCAL-DEVELOPMENT.md) for full guide.
 
-### Option C: Supabase Cloud
+### Option C: Docker (1 lệnh, không cần Node.js)
+
+```bash
+git clone https://github.com/Minh-Tam-Solution/AncestorTree.git
+cd AncestorTree
+cp frontend/.env.local.example frontend/.env.local
+# Fill in Supabase credentials
+docker compose up -d
+```
+
+Open [http://localhost:4000](http://localhost:4000)
+
+### Option D: Supabase Cloud
 
 ```bash
 git clone https://github.com/Minh-Tam-Solution/AncestorTree.git
@@ -167,6 +189,7 @@ AncestorTree/
 │   │   │       ├── documents/       # Kho tài liệu (v2.2)
 │   │   │       ├── help/           # Hướng dẫn sử dụng (v2.2)
 │   │   │       ├── people/         # Quản lý thành viên
+│   │   │       ├── settings/       # Hồ sơ + Bảo mật MFA (v2.4)
 │   │   │       ├── tree/           # Cây gia phả
 │   │   │       └── admin/          # Admin panel
 │   │   ├── components/             # React components
@@ -196,6 +219,7 @@ AncestorTree/
 │   ├── migrations/                 # SQLite versioned migrations + seed data
 │   ├── electron-builder.yml        # Cross-platform build config
 │   └── package.json                # Electron + sql.js deps
+├── docker-compose.yml              # Docker deployment (v2.4)
 ├── .sdlc-config.json               # SDLC configuration
 ├── CLAUDE.md                       # AI assistant guidelines
 └── README.md
@@ -246,6 +270,7 @@ v2.1.0 Landing   [##########] Done - Landing page + community docs + SEO
 v2.2.0 Documents [##########] Done - Kho tài liệu + In-App Help guide
 v2.2.1 Security  [##########] Done - Security patch + Clan name config + Settings page
 v2.3.0 Privacy   [##########] Done - Xác nhận thành viên + Sub-admin + Privacy controls
+v2.4.0 Profile   [##########] Done - Hồ sơ + MFA + Sao lưu + Docker + Rate limiting
 v3.0.0 Community [----------] Future - Nhà thờ họ, Notifications, Cross-clan
 ```
 

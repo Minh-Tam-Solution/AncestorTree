@@ -2,7 +2,7 @@
 project: AncestorTree
 path: CLAUDE.md
 type: agent-guidelines
-version: 2.3.0
+version: 2.4.0
 updated: 2026-03-01
 ---
 
@@ -15,7 +15,7 @@ This file provides guidance to AI assistants (Claude, GPT, etc.) when working wi
 **AncestorTree** (Gia Phả Điện Tử) is a digital family tree management system for Chi tộc Đặng Đình, Thạch Lâm, Hà Tĩnh.
 
 - **Repository:** https://github.com/Minh-Tam-Solution/AncestorTree
-- **Current Version:** v2.3.0 (Privacy, Verification & Clan Settings)
+- **Current Version:** v2.4.0 (Profile, MFA, Backup & Docker)
 - **SDLC Tier:** LITE (5 stages)
 - **Tech Stack:** Next.js 16, React 19, Tailwind CSS 4, Supabase, Electron 34 (desktop)
 - **Built with:** [TinySDLC](https://github.com/Minh-Tam-Solution/tinysdlc) + [MTS-SDLC-Lite](https://github.com/Minh-Tam-Solution/MTS-SDLC-Lite)
@@ -91,16 +91,19 @@ AncestorTree/
 │   │       ├── fund/               # Quỹ khuyến học (Sprint 6)
 │   │       ├── help/               # Hướng dẫn sử dụng (Sprint 11)
 │   │       ├── people/             # Quản lý thành viên
+│   │       ├── settings/profile/   # Hồ sơ tài khoản (Sprint 12)
+│   │       ├── settings/security/  # Bảo mật MFA (Sprint 12)
 │   │       ├── tree/               # Cây gia phả
 │   │       └── admin/              # Admin panel
 │   │           ├── achievements/   # QL Vinh danh (Sprint 6)
 │   │           ├── cau-duong/      # QL Cầu đường (Sprint 7)
 │   │           ├── charter/        # QL Hương ước (Sprint 6)
 │   │           ├── contributions/  # QL Đóng góp (Sprint 4)
+│   │           ├── backup/         # Sao lưu & Phục hồi (Sprint 12)
 │   │           ├── documents/      # QL Tài liệu (Sprint 11)
 │   │           ├── fund/           # QL Quỹ & Học bổng (Sprint 6)
-│   │           ├── settings/       # Cài đặt
-│   │           └── users/          # QL Người dùng
+│   │           ├── settings/       # Cài đặt dòng họ
+│   │           └── users/          # QL Người dùng (verify/suspend/delete)
 │   ├── src/components/             # React components
 │   │   ├── ui/                     # shadcn/ui components
 │   │   ├── auth/                   # Auth components (auth-provider, verification-guard)
@@ -114,6 +117,8 @@ AncestorTree/
 │   │   ├── use-contributions.ts    # Contribution hooks (Sprint 4)
 │   │   ├── use-events.ts           # Event hooks (Sprint 4)
 │   │   ├── use-families.ts         # Family relations hooks (Sprint 7.5)
+│   │   ├── use-backup-schedule.ts   # Backup schedule hooks (Sprint 12)
+│   │   ├── use-clan-settings.ts    # Clan settings hooks (Sprint 12)
 │   │   ├── use-documents.ts        # Document CRUD hooks (Sprint 11)
 │   │   ├── use-fund.ts             # Fund & scholarship hooks (Sprint 6)
 │   │   └── use-profiles.ts         # User management hooks (Sprint 12)
@@ -122,7 +127,8 @@ AncestorTree/
 │   │   ├── supabase-data.ts        # Core data layer (people, families)
 │   │   ├── supabase-data-achievements.ts  # Achievement data (Sprint 6)
 │   │   ├── supabase-data-cau-duong.ts     # Cầu đường + DFS algorithm (Sprint 7)
-│   │   ├── supabase-data-charter.ts       # Charter data (Sprint 6)
+│   │   ├── supabase-data-charter.ts        # Charter data (Sprint 6)
+│   │   ├── supabase-data-clan-settings.ts # Clan settings data (Sprint 12)
 │   │   ├── supabase-data-documents.ts     # Document data (Sprint 11)
 │   │   ├── supabase-data-fund.ts          # Fund & scholarship data (Sprint 6)
 │   │   └── lunar-calendar.ts       # Lunar-solar conversion (Sprint 4)
@@ -146,6 +152,7 @@ AncestorTree/
 │   ├── electron-builder.yml        # Cross-platform build config
 │   ├── package.json                # Electron + sql.js deps
 │   └── tsconfig.json
+├── docker-compose.yml              # Docker deployment (v2.4)
 ├── .sdlc-config.json               # SDLC configuration
 ├── CLAUDE.md                       # AI assistant guidelines
 └── README.md                       # Project overview
@@ -297,6 +304,14 @@ chore/upgrade-deps
 | Help Page | `frontend/src/app/(main)/help/page.tsx` |
 | Document Library | `frontend/src/app/(main)/documents/library/page.tsx` |
 | Admin Documents | `frontend/src/app/(main)/admin/documents/page.tsx` |
+| Admin Backup | `frontend/src/app/(main)/admin/backup/page.tsx` |
+| Backup API | `frontend/src/app/api/backup/route.ts` |
+| Restore API | `frontend/src/app/api/backup/restore/route.ts` |
+| Profile Settings | `frontend/src/app/(main)/settings/profile/page.tsx` |
+| Security/MFA Settings | `frontend/src/app/(main)/settings/security/page.tsx` |
+| Clan Settings Data | `frontend/src/lib/supabase-data-clan-settings.ts` |
+| Docker Compose | `docker-compose.yml` |
+| Dockerfile | `frontend/Dockerfile` |
 
 ## Common Tasks
 
@@ -359,6 +374,31 @@ chore/upgrade-deps
 - Boolean columns: SQLite uses 0/1, API route converts ↔ true/false
 - JSONB columns: stored as TEXT in SQLite, `JSON.stringify()`/`JSON.parse()` in API route
 
+### Docker Deployment
+
+- `docker-compose.yml` at project root, `Dockerfile` in `frontend/`
+- 3-stage build: deps → builder (standalone) → runner (node:20-alpine)
+- Port 4000 (configurable via `APP_PORT`)
+- Backup volume: `./docker-data/backups:/data/backups`
+- Health check: `wget http://127.0.0.1:4000/` every 30s
+- Rate limiting reads IP from `X-Forwarded-For` header (Docker networking)
+
+### MFA (Multi-Factor Authentication)
+
+- TOTP-based via Supabase MFA API (Google Authenticator compatible)
+- Settings page: `/settings/security` — enroll, verify, unenroll
+- MFA not applicable in Desktop mode (no real auth)
+- `supabase.auth.mfa.enroll()` / `.challengeAndVerify()` / `.unenroll()`
+
+### Backup & Restore
+
+- Admin page: `/admin/backup` — export 13 tables to ZIP, 1-click restore
+- API: `POST /api/backup` (export), `POST /api/backup/restore` (import)
+- Backup uses service-role client (bypass RLS)
+- Auto-backup schedule stored in localStorage (daily/weekly/monthly)
+- Desktop: inline media embedding; Web: reference-only
+- Restore validates column allowlist per table (SEC-CRIT-03)
+
 ## Secure Coding Standards (Updated 2026-02-27)
 
 > Full review: `docs/backend/SECURE-CODING-REVIEW.md`
@@ -397,6 +437,13 @@ chore/upgrade-deps
 - Supabase JWT stored in HttpOnly cookies (via `@supabase/ssr`) — never localStorage
 - Desktop mode bypasses auth only when `NEXT_PUBLIC_DESKTOP_MODE === 'true'`
 - Always `try/catch` auth calls with timeout (5s in middleware) to avoid cold-start hangs
+- MFA (TOTP) support via Supabase MFA API — enroll/verify/unenroll in `/settings/security`
+
+**Rate Limiting:**
+- Auth endpoints protected in `proxy.ts`: login 20/min, register 10/min, forgot-password 6/5min
+- In-memory Map store, passive cleanup on expired window
+- Returns `429 Too Many Requests` with `Retry-After` header
+- Secondary defense layer (primary = Supabase GoTrue config)
 
 ### Known Issues (Backlog)
 - `SEC-CRIT-01` P0: No file size limit on `/api/media` upload → add `MAX_FILE_SIZE` check
