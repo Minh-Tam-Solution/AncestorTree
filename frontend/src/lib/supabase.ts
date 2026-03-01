@@ -38,8 +38,9 @@ function createSupabaseClient(): SupabaseClient {
   if (supabaseUrl && supabaseAnonKey) {
     return createBrowserClient(supabaseUrl, supabaseAnonKey, {
       global: { fetch: fetchWithTimeout },
-      auth: { lock: noopLock },
+      auth: { lock: process.env.NODE_ENV === 'development' ? noopLock : undefined },
       cookieOptions: {
+        path: '/',                                          // Scope cookie to entire app, not just current path
         maxAge: 3600,                                       // 1-hour session expiry
         sameSite: 'lax',
         secure: process.env.NODE_ENV === 'production',

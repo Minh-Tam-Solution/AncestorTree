@@ -76,22 +76,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     });
 
-    // Listen for auth changes
+    // Listen for auth changes.
+    // IMPORTANT: callback must NOT be async and must NOT await inside.
+    // supabase-js _notifyAllSubscribers() awaits every subscriber while holding
+    // the Navigator auth lock. Any internal supabase call (getSession, from()...)
+    // that also needs the lock causes a permanent deadlock — challengeAndVerify /
+    // signIn never return. Fix: return synchronously; fire async work detached.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, s) => {
+      (event, s) => {
         authLog('onAuthStateChange', { event, userId: s?.user?.id ?? null });
         setSession(s);
         setUser(s?.user ?? null);
 
         if (s?.user) {
-          const p = await fetchProfile(s.user.id);
-          if (p?.is_suspended) {
-            authLog('onAuthStateChange:suspended', { userId: s.user.id });
-            await supabase.auth.signOut();
-            window.location.replace('/login?error=suspended');
-            return;
-          }
-          setProfile(p);
+          const userId = s.user.id;
+          // Detached — runs after this callback returns, outside the lock window.
+          fetchProfile(userId).then((p) => {
+            if (p?.is_suspended) {
+              authLog('onAuthStateChange:suspended', { userId });
+              supabase.auth.signOut().then(() => {
+                window.location.replace('/login?error=suspended');
+              });
+              return;
+            }
+            setProfile(p);
+          }).catch((err) => {
+            console.error('[Auth] onAuthStateChange:fetchProfile error', err);
+          });
         } else {
           setProfile(null);
         }

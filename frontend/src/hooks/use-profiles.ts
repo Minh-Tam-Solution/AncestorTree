@@ -2,8 +2,8 @@
  * @project AncestorTree
  * @file src/hooks/use-profiles.ts
  * @description React Query hooks for user profiles
- * @version 1.1.0
- * @updated 2026-02-28
+ * @version 1.2.0
+ * @updated 2026-03-01
  */
 
 'use client';
@@ -16,6 +16,10 @@ import {
   updateUserRole,
   updateLinkedPerson,
   updateEditRootPerson,
+  suspendUser,
+  unsuspendUser,
+  verifyUser,
+  getUnverifiedProfiles,
 } from '@/lib/supabase-data';
 import { deleteUserAccount } from '@/app/(main)/admin/users/actions';
 import type { Profile, UserRole } from '@/types';
@@ -43,6 +47,13 @@ export function useProfile(userId: string | undefined) {
     queryKey: profileKeys.detail(userId!),
     queryFn: () => getProfile(userId!),
     enabled: !!userId,
+  });
+}
+
+export function useUnverifiedProfiles() {
+  return useQuery({
+    queryKey: profileKeys.unverified(),
+    queryFn: getUnverifiedProfiles,
   });
 }
 
@@ -93,6 +104,52 @@ export function useUpdateEditRootPerson() {
   return useMutation({
     mutationFn: ({ userId, personId }: { userId: string; personId: string | null }) =>
       updateEditRootPerson(userId, personId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKeys.all });
+    },
+  });
+}
+
+export function useSuspendUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ userId, reason }: { userId: string; reason?: string }) =>
+      suspendUser(userId, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKeys.all });
+    },
+  });
+}
+
+export function useUnsuspendUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (userId: string) => unsuspendUser(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKeys.all });
+    },
+  });
+}
+
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (userId: string) => deleteUserAccount(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKeys.all });
+    },
+  });
+}
+
+export function useVerifyUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ userId, verified }: { userId: string; verified: boolean }) =>
+      verifyUser(userId, verified),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: profileKeys.all });
     },

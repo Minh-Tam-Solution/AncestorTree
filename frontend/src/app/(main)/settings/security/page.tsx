@@ -122,15 +122,25 @@ export default function SecurityPage() {
     if (!enrollState || totpCode.length !== 6) return;
     setIsVerifying(true);
     try {
-      const { error } = await supabase.auth.mfa.challengeAndVerify({
+      const { data, error } = await supabase.auth.mfa.challengeAndVerify({
         factorId: enrollState.factorId,
         code: totpCode,
       });
       if (error) throw error;
       toast.success('Xác thực 2 bước đã được bật thành công!');
+      // Use the user data already returned by challengeAndVerify() — avoids calling
+      // getUser() immediately after verify, which would deadlock against the auth lock
+      // still held by the concurrent onAuthStateChange handler.
+      const totp = ((data.user.factors ?? []).filter(
+        (f) => f.factor_type === 'totp'
+      )) as TotpFactor[];
+      setFactors(
+        totp.length > 0
+          ? totp
+          : [{ id: enrollState.factorId, friendly_name: 'Google Authenticator', status: 'verified' }]
+      );
       setEnrollState(null);
       setTotpCode('');
-      await loadFactors();
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Mã xác thực không đúng. Vui lòng thử lại.');
       setTotpCode('');
@@ -155,8 +165,9 @@ export default function SecurityPage() {
       const { error } = await supabase.auth.mfa.unenroll({ factorId: unenrollId });
       if (error) throw error;
       toast.success('Đã tắt xác thực 2 bước.');
+      // Optimistic update — avoids a getUser() call while the auth lock may still be held
+      setFactors((prev) => prev.filter((f) => f.id !== unenrollId));
       setUnenrollId(null);
-      await loadFactors();
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Lỗi khi tắt xác thực');
     } finally {

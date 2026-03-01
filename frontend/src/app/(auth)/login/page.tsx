@@ -25,14 +25,69 @@ interface TotpStepProps {
 function TotpStep({ factorId, onSuccess, onBack }: TotpStepProps) {
   const [code, setCode] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
+  // Challenge is created on mount (after the component renders, isolated from parent's async flow).
+  // Keeping state internal avoids timing races between signIn's onAuthStateChange and verify.
+  const [challengeId, setChallengeId] = useState<string | null>(null);
+
+  const requestChallenge = async () => {
+    try {
+      const { data, error } = await supabase.auth.mfa.challenge({ factorId });
+      if (error) {
+        console.error('[MFA] challenge error:', error.message, error.status);
+        return;
+      }
+      setChallengeId(data.id);
+    } catch (err) {
+      console.error('[MFA] challenge exception:', err);
+    }
+  };
+
+  // Create challenge immediately after mount so it is ready before user opens the authenticator app.
+  // useEffect runs after paint — by then, signIn's onAuthStateChange handler has fully settled,
+  // eliminating the noopLock race window that caused concurrent _acquireLock collisions.
+  useEffect(() => {
+    let cancelled = false;
+    supabase.auth.mfa.challenge({ factorId }).then(({ data, error }) => {
+      if (cancelled) return;
+      if (error) {
+        console.error('[MFA] challenge on mount error:', error.message, error.status);
+        return;
+      }
+      setChallengeId(data.id);
+    });
+    return () => { cancelled = true; };
+  }, [factorId]);
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     if (code.length !== 6) return;
     setIsVerifying(true);
     try {
-      const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId, code });
-      if (error) throw error;
+      let verifyError: Error | null = null;
+
+      if (challengeId) {
+        // Pre-created challenge: mfa.verify() goes straight to _verify, no _challengeAndVerify.
+        const { error } = await supabase.auth.mfa.verify({ factorId, challengeId, code });
+        verifyError = error ?? null;
+      } else {
+        // Fallback: challenge was not ready yet (e.g. very fast user, or network hiccup).
+        const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId, code });
+        verifyError = error ?? null;
+      }
+
+      if (verifyError) {
+        // Refresh challenge so the next attempt works (old challenge is consumed/expired).
+        await requestChallenge();
+        const is422 = (verifyError as unknown as { status?: number }).status === 422;
+        toast.error(
+          is422
+            ? 'Mã không đúng hoặc đã hết hạn. Kiểm tra đồng hồ thiết bị và thử lại.'
+            : verifyError.message
+        );
+        setCode('');
+        return;
+      }
+
       toast.success('Xác thực 2 bước thành công!');
       onSuccess();
     } catch (err: unknown) {
@@ -105,7 +160,7 @@ function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // MFA state
+  // MFA state — challenge lifecycle is managed inside TotpStep (useEffect on mount)
   const [totpFactorId, setTotpFactorId] = useState<string | null>(null);
 
   // Show suspended error from query param
@@ -131,7 +186,7 @@ function LoginForm() {
         if (totp) {
           setTotpFactorId(totp.id);
           setIsLoading(false);
-          return; // Show TOTP step instead of redirecting
+          return; // Show TOTP step — TotpStep creates the challenge in its useEffect
         }
       }
 

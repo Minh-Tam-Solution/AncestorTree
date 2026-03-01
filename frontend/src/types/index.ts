@@ -104,6 +104,13 @@ export interface Profile {
   /** FK → people.id: subtree root this user can edit (null = global editor) */
   edit_root_person_id?: string;
   avatar_url?: string;
+  /** Admin-verified account — false = awaiting admin approval (Sprint 12) */
+  is_verified?: boolean;
+  /** Suspended accounts cannot sign in */
+  is_suspended?: boolean;
+  suspension_reason?: string;
+  /** Sub-admin: can approve new member registrations */
+  can_verify_members?: boolean;
   created_at: string;
   updated_at: string;
 }

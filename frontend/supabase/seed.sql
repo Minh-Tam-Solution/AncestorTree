@@ -99,9 +99,15 @@ INSERT INTO auth.identities (
     NOW(), NOW(), NOW()
 );
 
--- handle_new_user trigger sẽ tự tạo profiles, sau đó promote admin + editor
+-- handle_new_user trigger sẽ tự tạo profiles, sau đó promote admin + editor + verify demo users
 UPDATE public.profiles SET role = 'admin' WHERE user_id = 'aaaaaaaa-0001-4000-a000-000000000001';
 UPDATE public.profiles SET role = 'editor' WHERE user_id = 'aaaaaaaa-0003-4000-a000-000000000003';
+-- Mark all demo users as verified (they're seeded directly, not via real registration flow)
+UPDATE public.profiles SET is_verified = true WHERE user_id IN (
+  'aaaaaaaa-0001-4000-a000-000000000001',
+  'aaaaaaaa-0002-4000-a000-000000000002',
+  'aaaaaaaa-0003-4000-a000-000000000003'
+);
 
 -- ─── People (Đời 1–5, 18 thành viên) ─────────────────────────────────────
 
