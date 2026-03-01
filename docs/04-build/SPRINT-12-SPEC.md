@@ -2,8 +2,8 @@
 project: AncestorTree
 path: docs/04-build/SPRINT-12-SPEC.md
 type: build
-version: 1.0.0
-updated: 2026-02-28
+version: 1.1.0
+updated: 2026-03-01
 owner: "@pm"
 status: approved
 ---
@@ -13,6 +13,7 @@ status: approved
 **Version:** v2.3.0
 **Estimated:** 2-3 ngày
 **PJM Review:** APPROVED WITH CHANGES (7 issues addressed below)
+**v1.1.0 Update:** Thêm Task 13b/13c/13d (suspend, delete, profile type) + AC-S12-12~14
 
 ---
 
@@ -50,7 +51,7 @@ Phản hồi cộng đồng: cần tăng cường bảo mật thông tin cá nh�
 
 ---
 
-## 3. Tasks (16 tasks)
+## 3. Tasks (19 tasks)
 
 ### Task 1: Migration SQL (M)
 
@@ -290,6 +291,67 @@ Card layout:
 
 ---
 
+### Task 13b: Admin Users — Suspend/Unsuspend (v1.1.0)
+
+**File:** `frontend/src/app/(main)/admin/users/page.tsx`
+
+**Migration:** Already exists — `20260228000009_user_management.sql` adds `is_suspended`, `suspension_reason` columns + RLS policy.
+
+**Data layer:** Already exists in `supabase-data.ts`:
+
+- `suspendUser(userId, reason)` — sets `is_suspended = true` + `suspension_reason`
+- `unsuspendUser(userId)` — sets `is_suspended = false`, clears reason
+
+**Hook:** Add `useSuspendUser()` + `useUnsuspendUser()` to `use-profiles.ts`
+
+**UI changes:**
+
+- Suspend button per user row (icon: `Ban`)
+- Suspend dialog: textarea for reason → confirm
+- Suspended users: red `Badge("Đã đình chỉ")` + unsuspend button
+- Auth provider already blocks suspended users on login (redirect to `/login?error=suspended`)
+
+---
+
+### Task 13c: Admin Users — Delete Accounts (v1.1.0)
+
+**File:** `frontend/src/app/(main)/admin/users/page.tsx`
+
+**Server action:** Already exists — `deleteUserAccount(userId)` in `admin/users/actions.ts`
+
+- Uses `createServiceRoleClient()` → `auth.admin.deleteUser(userId)`
+- Cascade: Supabase Auth deletes user → profiles ON DELETE CASCADE
+
+**Hook:** Add `useDeleteUser()` to `use-profiles.ts`
+
+**UI changes:**
+
+- Delete button per user row (icon: `Trash2`, red variant)
+- Confirmation dialog: "Xóa vĩnh viễn tài khoản [email]? Hành động này không thể hoàn tác."
+- Cannot delete own account
+
+---
+
+### Task 13d: Profile Type — Suspension Fields (v1.1.0)
+
+**File:** `frontend/src/types/index.ts`
+
+**Changes:** Add 4 fields to `Profile` interface:
+
+```typescript
+export interface Profile {
+  // ... existing fields ...
+  is_suspended: boolean;
+  suspension_reason?: string;
+  is_verified: boolean;      // (from Task 4, already specified but missing in implementation)
+  can_verify_members: boolean; // (from Task 4, already specified but missing in implementation)
+}
+```
+
+> These fields exist in the database (migrations 20260228000008 + 20260228000009) but were not added to the TypeScript interface during initial implementation.
+
+---
+
 ### Task 14: Admin Documents — Privacy selector
 
 **File:** `frontend/src/app/(main)/admin/documents/page.tsx`
@@ -447,6 +509,9 @@ Phase 8 — Build:
 10. Editor có `can_verify_members` + `edit_root_person_id` → admin users chỉ thấy users trong subtree
 11. Upload tài liệu với privacy_level → viewer chỉ thấy public + members docs
 12. Desktop mode → auto-verified, bypass auth, all features work
+13. Admin suspend user → user bị đình chỉ, login redirect `/login?error=suspended`
+14. Admin unsuspend user → user đăng nhập bình thường trở lại
+15. Admin delete user → xóa vĩnh viễn khỏi auth.users + profiles (cascade)
 
 ---
 

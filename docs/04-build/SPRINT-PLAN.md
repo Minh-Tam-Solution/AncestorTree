@@ -2,8 +2,8 @@
 project: AncestorTree
 path: docs/04-build/SPRINT-PLAN.md
 type: build
-version: 3.1.0
-updated: 2026-02-28
+version: 3.2.0
+updated: 2026-03-01
 owner: "@pm"
 status: approved
 ---
@@ -1244,6 +1244,9 @@ frontend/
 | S12-14 | Admin Documents: privacy selector | 15m | @coder |
 | S12-15 | Document Library: privacy badge | 10m | @coder |
 | S12-16 | Register: email verification success card | 15m | @coder |
+| S12-17 | Admin Users: suspend/unsuspend accounts (migration 20260228000009) | 30m | @coder |
+| S12-18 | Admin Users: delete accounts permanently (server action) | 20m | @coder |
+| S12-19 | Profile type: add is_suspended, suspension_reason fields | 10m | @coder |
 
 ### Acceptance Criteria
 
@@ -1260,6 +1263,9 @@ frontend/
 | AC-S12-09 | Person detail uses useCanEditPerson hook (branch-aware) | ⏳ |
 | AC-S12-10 | Desktop mode hoạt động bình thường (auto-verified) | ⏳ |
 | AC-S12-11 | `pnpm build` passes | ⏳ |
+| AC-S12-12 | Admin suspend user → user bị đình chỉ, không đăng nhập được | ⏳ |
+| AC-S12-13 | Admin unsuspend user → user đăng nhập bình thường | ⏳ |
+| AC-S12-14 | Admin delete user → xóa vĩnh viễn khỏi auth + profiles | ⏳ |
 
 ---
 

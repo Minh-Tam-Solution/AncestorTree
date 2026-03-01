@@ -10,6 +10,8 @@
 
 'use server';
 
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
 import { createServiceRoleClient } from '@/lib/supabase';
 
 /**
@@ -19,10 +21,39 @@ import { createServiceRoleClient } from '@/lib/supabase';
  * Security:
  * - Only callable server-side (Next.js Server Action)
  * - Uses SUPABASE_SERVICE_ROLE_KEY — never exposed to browser
+ * - Caller must be admin (ISS-02: authorization check)
  * - Desktop mode: not applicable (no real Supabase Auth in desktop)
  */
 export async function deleteUserAccount(userId: string): Promise<void> {
   if (!userId) throw new Error('userId is required');
+
+  // ISS-02: Verify caller is admin before using service-role key
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return cookieStore.getAll(); },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
+        },
+      },
+    },
+  );
+
+  const { data: { user: caller } } = await supabase.auth.getUser();
+  if (!caller) throw new Error('Unauthorized: not authenticated');
+
+  const { data: callerProfile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('user_id', caller.id)
+    .single();
+
+  if (callerProfile?.role !== 'admin') {
+    throw new Error('Unauthorized: admin role required');
+  }
 
   const adminClient = createServiceRoleClient();
 

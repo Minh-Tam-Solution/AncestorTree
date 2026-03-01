@@ -183,9 +183,15 @@ export async function proxy(request: NextRequest) {
     try {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('role, is_verified')
+        .select('role, is_verified, is_suspended')
         .eq('user_id', user.id)
         .single();
+
+      // Suspended users are blocked immediately (ISS-01: defense-in-depth)
+      if (profile?.is_suspended === true) {
+        mwLog('WARN', 'redirect', { pathname, destination: '/login?error=suspended', reason: 'suspended', userId: user.id });
+        return NextResponse.redirect(new URL('/login?error=suspended', request.url));
+      }
 
       // Unverified users can only access /pending-verification (and sign out)
       // Use !== true (not === false) so null/missing profile also blocks access (ISS-03)

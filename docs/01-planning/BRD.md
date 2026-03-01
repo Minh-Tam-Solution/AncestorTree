@@ -2,8 +2,8 @@
 project: AncestorTree
 path: docs/01-planning/BRD.md
 type: planning
-version: 1.4.0
-updated: 2026-02-26
+version: 1.5.0
+updated: 2026-03-01
 owner: "@pm"
 status: approved
 ---
@@ -19,6 +19,7 @@ status: approved
 | 1.2.0 | 2026-02-25 | @pm | Add Lịch Cầu đương — phân công xoay vòng chủ lễ |
 | 1.3.0 | 2026-02-25 | @pm | Sprint 7.5 — Family Relations UX, Tree hierarchical layout, Branch filter, Tree-scoped editor (FR-507~510) |
 | 1.4.0 | 2026-02-26 | @pm | Sprint 8 — Local Development Mode (NFR-18~20, updated Integration Requirements) |
+| 1.5.0 | 2026-03-01 | @pm | Sprint 12 — User Management CRUD: verify, suspend, delete, sub-admin (FR-511~514) |
 
 ---
 
@@ -110,6 +111,10 @@ status: approved
 | **FR-508** | Quyền editor theo nhánh (Tree-scoped editor) | P1 | User được sửa bản thân, vợ/chồng, và toàn bộ con cháu |
 | **FR-509** | Admin gán quyền edit theo chi/nhánh | P2 | Chọn person gốc → user có quyền edit subtree đó |
 | **FR-510** | Enforce ranh giới subtree (server-side) | P1 | RLS / middleware chặn edit ngoài phạm vi được cấp |
+| **FR-511** | Admin xác nhận / hủy xác nhận tài khoản | P1 | Admin toggle is_verified → user access full hoặc bị chặn |
+| **FR-512** | Admin đình chỉ / bỏ đình chỉ tài khoản | P2 | Suspend → user không đăng nhập được; unsuspend → khôi phục |
+| **FR-513** | Admin xóa tài khoản vĩnh viễn | P2 | Delete auth.users + cascade profiles; không thể hoàn tác |
+| **FR-514** | Sub-admin xác nhận thành viên trong nhánh | P2 | Editor có can_verify_members chỉ verify users có linked_person trong subtree |
 
 ### 3.6 Epic: Đóng góp & Kiểm duyệt (Contributions)
 

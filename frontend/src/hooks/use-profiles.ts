@@ -16,6 +16,10 @@ import {
   updateUserRole,
   updateLinkedPerson,
   updateEditRootPerson,
+  suspendUser,
+  unsuspendUser,
+  verifyUser,
+  updateCanVerifyMembers,
 } from '@/lib/supabase-data';
 import { deleteUserAccount } from '@/app/(main)/admin/users/actions';
 import type { Profile, UserRole } from '@/types';
@@ -93,6 +97,69 @@ export function useUpdateEditRootPerson() {
   return useMutation({
     mutationFn: ({ userId, personId }: { userId: string; personId: string | null }) =>
       updateEditRootPerson(userId, personId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKeys.all });
+    },
+  });
+}
+
+// FR-512: suspend a user account
+export function useSuspendUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ userId, reason }: { userId: string; reason?: string }) =>
+      suspendUser(userId, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKeys.all });
+    },
+  });
+}
+
+// FR-512: unsuspend a user account
+export function useUnsuspendUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (userId: string) => unsuspendUser(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKeys.all });
+    },
+  });
+}
+
+// FR-511: verify/unverify a user account
+export function useVerifyUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ userId, verified }: { userId: string; verified: boolean }) =>
+      verifyUser(userId, verified),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKeys.all });
+    },
+  });
+}
+
+// FR-514: toggle can_verify_members for sub-admin
+export function useUpdateCanVerifyMembers() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ userId, canVerify }: { userId: string; canVerify: boolean }) =>
+      updateCanVerifyMembers(userId, canVerify),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKeys.all });
+    },
+  });
+}
+
+// FR-513: delete a user account permanently
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (userId: string) => deleteUserAccount(userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: profileKeys.all });
     },
