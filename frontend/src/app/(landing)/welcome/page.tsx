@@ -1,8 +1,8 @@
 /**
  * @project AncestorTree
  * @file src/app/(landing)/welcome/page.tsx
- * @description Public landing page — 9 sections, Vietnamese-first, SSR static
- * @version 2.3.0
+ * @description Public landing page — 10 sections, Vietnamese-first, SSR static
+ * @version 2.4.0
  * @updated 2026-03-01
  */
 
@@ -12,6 +12,7 @@ import {
   GitBranch, Calendar, Users, Shield, Bug, LogIn,
   Lightbulb, MessageCircle, Code2, Heart,
   ChevronRight, Award, BookOpen, Utensils, Clock, Rocket,
+  Mail, Phone, UserCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -118,7 +119,7 @@ export default function WelcomePage() {
         </div>
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32 text-center">
           <Badge variant="secondary" className="mb-6 text-sm px-4 py-1">
-            Open Source &middot; MIT License &middot; v2.3.0
+            Open Source &middot; MIT License &middot; v2.4.0
           </Badge>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-4">
             Gia Phả Điện Tử
@@ -504,7 +505,75 @@ export default function WelcomePage() {
         </div>
       </section>
 
-      {/* ───── 8. For Developers ───── */}
+      {/* ───── 8. Liên hệ ───── */}
+      <section id="contact" className="py-20 bg-emerald-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">Liên hệ</h2>
+            <p className="text-gray-500 max-w-2xl mx-auto">
+              Phần mềm được phát triển phục vụ chi tộc Đặng Đình, Thạch Lâm, Hà Tĩnh.
+              Con cháu họ Đặng vui lòng liên hệ để được hỗ trợ.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {/* Author card */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Tác giả</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-base font-semibold text-gray-900">Đặng Thế Tài</p>
+                <div className="space-y-2">
+                  <a href="mailto:dangtt1971@gmail.com" className="flex items-center gap-3 text-sm text-gray-600 hover:text-emerald-700">
+                    <Mail className="h-4 w-4 text-emerald-600" />
+                    dangtt1971@gmail.com
+                  </a>
+                  <a href="tel:0939116006" className="flex items-center gap-3 text-sm text-gray-600 hover:text-emerald-700">
+                    <Phone className="h-4 w-4 text-emerald-600" />
+                    0939 116 006
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Verification guide card */}
+            <Card className="border-emerald-200">
+              <CardHeader className="pb-3">
+                <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center mb-2">
+                  <UserCheck className="h-5 w-5 text-emerald-600" />
+                </div>
+                <CardTitle className="text-lg">Hướng dẫn xác nhận tài khoản</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ol className="space-y-2">
+                  {[
+                    'Đăng ký tài khoản tại trang Đăng ký',
+                    'Liên hệ Admin qua email hoặc điện thoại ở trên',
+                    'Cung cấp họ tên, quan hệ trong dòng họ',
+                    'Admin xác nhận — bạn có thể truy cập đầy đủ',
+                  ].map((step, i) => (
+                    <li key={i} className="flex gap-3 text-sm text-gray-600">
+                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 text-xs flex items-center justify-center font-medium">
+                        {i + 1}
+                      </span>
+                      {step}
+                    </li>
+                  ))}
+                </ol>
+                <div className="mt-4">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/register">
+                      Đăng ký tài khoản <ChevronRight className="ml-1 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* ───── 9. Dành cho lập trình viên ───── */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mx-auto text-center">
@@ -529,14 +598,14 @@ export default function WelcomePage() {
         </div>
       </section>
 
-      {/* ───── 9. Footer ───── */}
+      {/* ───── 10. Footer ───── */}
       <footer className="border-t bg-white py-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500">
             <div className="flex items-center gap-2">
               <span className="text-lg">🌳</span>
               <span className="font-semibold text-gray-700">AncestorTree</span>
-              <span className="text-gray-400">v2.3.0</span>
+              <span className="text-gray-400">v2.4.0</span>
             </div>
             <div className="flex items-center gap-4">
               <a href={GITHUB_REPO} target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">
@@ -551,7 +620,7 @@ export default function WelcomePage() {
             </div>
           </div>
           <p className="text-center text-xs text-gray-400 mt-6">
-            &copy; 2026 AncestorTree — Built with TinySDLC &middot; MIT License
+            &copy; 2026 AncestorTree &middot; Tác giả: Đặng Thế Tài &middot; Built with TinySDLC &middot; MIT License
           </p>
         </div>
       </footer>

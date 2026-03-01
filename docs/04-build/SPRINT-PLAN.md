@@ -1291,6 +1291,29 @@ frontend/
 | S13-07 | Desktop: SQLite tables + migrations | 30m | @dev |
 | S13-08 | Build & verify | 15m | @dev |
 
+### Backlog — Bulk Admin Actions (deferred)
+
+> **CTO Review Decision (2026-03-01):** Bulk user actions (mass suspend / delete / unverify)
+> were proposed during Sprint 12 but **rejected** due to security and architecture concerns:
+>
+> - ISS-01: No undo for permanent delete — bulk amplifies damage
+> - ISS-02: Service-role key bypass via client-side API is too risky at scale
+> - ISS-03: No server-side authorization on API routes (only client-side role check)
+> - ISS-04: Frontend-only batch loop (N sequential API calls) — no transactional guarantee
+> - ISS-05: Scope creep — current user count (~30) doesn't justify the engineering
+> - ISS-06: Better handled by a one-time SQL migration for existing data cleanup
+>
+> **Resolution:** One-time cleanup of legacy viewer accounts via SQL migration.
+> Bulk actions will be properly scoped in Sprint 13+ **only if needed**, with:
+>
+> - Full FR (Functional Requirements) spec
+> - Server-side batch API endpoint (single transaction)
+> - Service-role authorization with audit logging
+> - Confirmation dialogs with explicit count + action preview
+> - Undo/soft-delete instead of permanent delete
+>
+> See also: `docs/backend/SECURE-CODING-REVIEW.md`
+
 ---
 
 ## Sprint 14 — Thông báo & Nhắc nhở (v2.5.0) 📋
