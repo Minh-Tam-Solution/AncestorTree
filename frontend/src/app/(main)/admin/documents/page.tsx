@@ -321,6 +321,9 @@ export default function AdminDocumentsPage() {
                         {doc.privacy_level === 0 && (
                           <Badge className="mr-1 text-xs bg-green-100 text-green-800">Công khai</Badge>
                         )}
+                        {doc.privacy_level === 1 && (
+                          <Badge className="mr-1 text-xs bg-blue-100 text-blue-800">Thành viên</Badge>
+                        )}
                         {doc.privacy_level === 2 && (
                           <Badge className="mr-1 text-xs bg-red-100 text-red-800">Nội bộ</Badge>
                         )}

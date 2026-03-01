@@ -9,16 +9,7 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  useProfiles,
-  useUpdateUserRole,
-  useUpdateLinkedPerson,
-  useUpdateEditRootPerson,
-  useSuspendUser,
-  useUnsuspendUser,
-  useDeleteUser,
-  useVerifyUser,
-} from '@/hooks/use-profiles';
+import { useProfiles, useUpdateUserRole, useUpdateLinkedPerson, useUpdateEditRootPerson } from '@/hooks/use-profiles';
 import { useSearchPeople, usePerson } from '@/hooks/use-people';
 import { useAuth } from '@/components/auth/auth-provider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -73,10 +64,6 @@ import {
   Search,
   X,
   GitBranch,
-  Ban,
-  ShieldCheck,
-  Trash2,
-  Clock,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -350,6 +337,25 @@ export default function UsersPage() {
   } | null>(null);
 
   const [mappingUser, setMappingUser] = useState<Profile | null>(null);
+  const [suspendDialog, setSuspendDialog] = useState<{ open: boolean; user: Profile } | null>(null);
+  const [suspendReason, setSuspendReason] = useState('');
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; user: Profile } | null>(null);
+  const [showUnverifiedOnly, setShowUnverifiedOnly] = useState(false);
+
+  const suspendMutation = useSuspendUser();
+  const unsuspendMutation = useUnsuspendUser();
+  const deleteMutation = useDeleteUser();
+  const verifyMutation = useVerifyUser();
+
+  const unverifiedCount = useMemo(
+    () => (profiles ?? []).filter((p) => !p.is_verified).length,
+    [profiles],
+  );
+
+  const displayedProfiles = useMemo(
+    () => showUnverifiedOnly ? (profiles ?? []).filter((p) => !p.is_verified) : (profiles ?? []),
+    [profiles, showUnverifiedOnly],
+  );
 
   const handleRoleChange = (userId: string, newRole: UserRole, currentRole: UserRole, userName: string) => {
     if (newRole === currentRole) return;
@@ -595,41 +601,6 @@ export default function UsersPage() {
                         >
                           <Link2 className="h-3.5 w-3.5" />
                         </Button>
-
-                        {/* Verify / unverify button */}
-                        {!isSelf(user) && (
-                          user.is_verified ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-muted-foreground"
-                              onClick={() => verifyMutation.mutate({ userId: user.user_id, verified: false })}
-                              disabled={verifyMutation.isPending}
-                              title="Bỏ xác nhận"
-                            >
-                              {verifyMutation.isPending ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <CheckCircle className="h-3.5 w-3.5 text-green-600" />
-                              )}
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-amber-600 border-amber-200 hover:bg-amber-50"
-                              onClick={() => verifyMutation.mutate({ userId: user.user_id, verified: true })}
-                              disabled={verifyMutation.isPending}
-                              title="Xác nhận tài khoản"
-                            >
-                              {verifyMutation.isPending ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <Clock className="h-3.5 w-3.5" />
-                              )}
-                            </Button>
-                          )
-                        )}
 
                         {/* Suspend / unsuspend button */}
                         {!isSelf(user) && (

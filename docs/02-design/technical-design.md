@@ -2,8 +2,8 @@
 project: AncestorTree
 path: docs/02-design/technical-design.md
 type: design
-version: 2.1.0
-updated: 2026-02-26
+version: 2.3.0
+updated: 2026-03-01
 owner: "@dev-team"
 status: approved
 ---
@@ -22,6 +22,7 @@ status: approved
 | 1.5.0   | 2026-02-26 | @architect | Add Desktop App Architecture — Electron + sql.js Shim (Sprint 9 Phase 1) |
 | 2.1.0   | 2026-02-26 | @pm        | Add Landing Page route group + SEO architecture (Sprint 10) |
 | 2.2.0   | 2026-02-27 | @pm        | Add In-App Help Page `/help` route (Sprint 11)    |
+| 2.3.0   | 2026-03-01 | @architect | Add Privacy, Verification & Sub-admin architecture (Sprint 12) |
 
 ---
 
@@ -1342,7 +1343,74 @@ Desktop build artifacts (.dmg, .exe) chưa có trên GitHub Releases tại thờ
 
 ---
 
-## 12. Approval
+## 12. Sprint 12: Privacy, Verification & Sub-admin Architecture (v2.3.0)
+
+### 12.1 Two-Step Verification Flow
+
+```
+User đăng ký → Supabase Auth gửi email xác nhận → User click link → email_confirmed = true
+→ Login → Middleware check profiles.is_verified
+  → false → Redirect /pending-verification (chờ admin duyệt)
+  → true  → Full access (theo role)
+```
+
+**Key:** Email verification (Supabase native) ≠ Account verification (admin approve). Cả hai đều phải pass.
+
+### 12.2 New Profile Columns
+
+| Column | Type | Default | Migration |
+|--------|------|---------|-----------|
+| `is_verified` | BOOLEAN | false | `20260228000008_sprint12` |
+| `can_verify_members` | BOOLEAN | false | `20260228000008_sprint12` |
+| `is_suspended` | BOOLEAN | false | `20260228000009_user_management` |
+| `suspension_reason` | TEXT | null | `20260228000009_user_management` |
+
+### 12.3 User Management CRUD
+
+| Action | Data Layer Function | RLS Policy | Notes |
+|--------|-------------------|------------|-------|
+| Verify/Unverify | `verifyUser(userId, bool)` | Admin UPDATE on profiles | Sets `is_verified` |
+| Suspend | `suspendUser(userId, reason)` | Admin UPDATE on profiles | Auth provider blocks login |
+| Unsuspend | `unsuspendUser(userId)` | Admin UPDATE on profiles | Clears `suspension_reason` |
+| Delete | `deleteUserAccount(userId)` | Server action (service role) | Cascade deletes profile |
+| Change role | `updateUserRole(userId, role)` | Admin UPDATE on profiles | admin/editor/viewer |
+| Link person | `updateLinkedPerson(userId, personId)` | Admin UPDATE on profiles | FR-507 tree mapping |
+| Set edit root | `updateEditRootPerson(userId, personId)` | Admin UPDATE on profiles | FR-509 branch scope |
+
+### 12.4 Sub-admin Scope (can_verify_members)
+
+```
+Editor + can_verify_members = true + edit_root_person_id = X
+→ Can verify users whose linked_person is in subtree of X
+→ RLS: is_person_in_subtree(edit_root_person_id, profiles.linked_person)
+→ Client: filter profiles for UX clarity
+```
+
+- `is_person_in_subtree(root_id, target_id)` — recursive SQL function from Sprint 7.5
+- No new role needed — reuses `editor` + boolean flag
+
+### 12.5 Privacy-Aware Document Access
+
+| `privacy_level` | Label | Who can see |
+|-----------------|-------|-------------|
+| 0 | Công khai (Public) | All authenticated users |
+| 1 | Thành viên (Members) | All authenticated users (default) |
+| 2 | Riêng tư (Admin only) | Admin only |
+
+RLS: 3 separate SELECT policies on `clan_documents` — all require `auth.uid() IS NOT NULL`.
+
+### 12.6 Suspension Flow
+
+```
+Admin suspends user → profiles.is_suspended = true, suspension_reason = "..."
+→ User next login → auth-provider.tsx fetchProfile() checks is_suspended
+→ If suspended → supabase.auth.signOut() → redirect /login?error=suspended
+→ Login page shows "Tài khoản đã bị đình chỉ" toast
+```
+
+---
+
+## 13. Approval
 
 | Role | Name | Date | Signature |
 |------|------|------|-----------|
