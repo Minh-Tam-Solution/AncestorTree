@@ -677,11 +677,23 @@ Authorization: Bearer {JWT}
   "file_type": "image/jpeg",
   "file_size": 204800,
   "category": "anh_lich_su | giay_to | ban_do | video | bai_viet | khac",
+  "privacy_level": 1,
   "tags": "lich-su,lang,1975",
   "person_id": "uuid",
   "uploaded_by": "uuid"
 }
 ```
+
+**Document privacy_level access matrix (v2.3.1):**
+
+| Role | privacy_level=0 (public) | privacy_level=1 (members) | privacy_level=2 (restricted) |
+|------|--------------------------|---------------------------|-------------------------------|
+| anonymous | ✗ (login required) | ✗ | ✗ |
+| viewer | ✓ | ✗ | ✗ |
+| editor | ✓ | ✓ | ✓ |
+| admin | ✓ | ✓ | ✓ |
+
+> **v2.3.1 fix** (`20260301000012`): `privacy_level=1` documents restricted to editor/admin roles only. Previously all authenticated users (incl. viewer) could read level 1 docs.
 
 ---
 

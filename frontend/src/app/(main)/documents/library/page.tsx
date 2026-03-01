@@ -17,9 +17,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Archive, Search, Image, FileText, Map, Video, PenLine, File, ArrowLeft, Download, ExternalLink } from 'lucide-react';
+import { Archive, Search, Image, FileText, Map, Video, PenLine, File, ArrowLeft, Download, ExternalLink, Info } from 'lucide-react';
 import type { DocumentCategory, ClanDocument } from '@/types';
 import { DOCUMENT_CATEGORY_LABELS } from '@/types';
+import { useAuth } from '@/components/auth/auth-provider';
 
 const ALL_CATEGORIES: DocumentCategory[] = ['anh_lich_su', 'giay_to', 'ban_do', 'video', 'bai_viet', 'khac'];
 
@@ -49,6 +50,8 @@ export default function DocumentLibraryPage() {
   const [search, setSearch] = useState('');
   const { data: documents, isLoading } = useDocuments(categoryFilter, search || undefined);
   const { data: people } = usePeople();
+  const { profile } = useAuth();
+  const isViewer = profile?.role === 'viewer';
 
   const peopleMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -75,6 +78,14 @@ export default function DocumentLibraryPage() {
           </div>
         </div>
       </div>
+
+      {/* Viewer notice */}
+      {isViewer && (
+        <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800">
+          <Info className="h-4 w-4 shrink-0" />
+          <span>Bạn đang xem tài liệu công khai. Một số tài liệu chỉ dành cho thành viên quản trị.</span>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">

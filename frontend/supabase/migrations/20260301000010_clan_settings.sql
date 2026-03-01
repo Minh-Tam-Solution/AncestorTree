@@ -26,6 +26,11 @@ INSERT INTO clan_settings (id, clan_name, clan_full_name)
 
 ALTER TABLE clan_settings ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies to ensure idempotent re-run
+DROP POLICY IF EXISTS "Authenticated users can view clan settings" ON clan_settings;
+DROP POLICY IF EXISTS "Anonymous users can view clan settings" ON clan_settings;
+DROP POLICY IF EXISTS "Admins and editors can update clan settings" ON clan_settings;
+
 -- All authenticated users can read clan settings
 CREATE POLICY "Authenticated users can view clan settings"
   ON clan_settings FOR SELECT TO authenticated
