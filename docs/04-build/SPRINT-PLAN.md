@@ -30,10 +30,10 @@ Sprint 10 ███████████████████████�
 --- Future (community contribution / owner has time) ---
 
 Sprint 11 ████████████████████████████████ v2.2.0 Kho tài liệu     ✅ DONE
-Sprint 12 ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ v2.3.0 Bảo mật & Xác nhận 🚧 IN PROGRESS
-Sprint 13 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ v2.4.0 Góc giao lưu     📋 PLANNED
-Sprint 14 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ v2.5.0 Thông báo        📋 PLANNED
-Sprint 15 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ v2.6.0 Export/Import    📋 PLANNED
+Sprint 12 ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ v2.4.0 Bảo mật & Hồ sơ  🚧 IN PROGRESS
+Sprint 13 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ v2.5.0 Góc giao lưu     📋 PLANNED
+Sprint 14 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ v2.6.0 Thông báo        📋 PLANNED
+Sprint 15 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ v2.7.0 Export/Import    📋 PLANNED
 Sprint 16 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ v3.0.0 Nhà thờ họ       📋 PLANNED
 
 Milestones:
@@ -1269,11 +1269,12 @@ frontend/
 
 ---
 
-## Sprint 13 — Góc giao lưu (v2.4.0) 📋
+## Sprint 13 — Góc giao lưu (v2.5.0) 📋
 
 **Status:** Planned — community contribution hoặc owner implement khi có thời gian
 **Goal:** Không gian chia sẻ cho người trẻ + Việt kiều — gửi ảnh quê, giao lưu
 **Ước lượng:** ~6-8 giờ
+**Spec:** [SPRINT-13-SPEC.md](./SPRINT-13-SPEC.md)
 
 > 💡 **Từ phản hồi người dùng:** "Người trẻ cũng nhiều, đi khắp trong nước, có cả nước ngoài.
 > Có box giao lưu thi thoảng gửi cái ảnh ở quê cho người xa nhà."
@@ -1316,7 +1317,7 @@ frontend/
 
 ---
 
-## Sprint 14 — Thông báo & Nhắc nhở (v2.5.0) 📋
+## Sprint 14 — Thông báo & Nhắc nhở (v2.6.0) 📋
 
 **Status:** Planned
 **Goal:** Email nhắc ngày giỗ, thông báo sự kiện mới
@@ -1336,7 +1337,7 @@ frontend/
 
 ---
 
-## Sprint 15 — Export/Import & Đồng bộ (v2.6.0) 📋
+## Sprint 15 — Export/Import & Đồng bộ (v2.7.0) 📋
 
 **Status:** Planned
 **Goal:** Chuyển dữ liệu Desktop ↔ Web, GEDCOM import, CSV export
