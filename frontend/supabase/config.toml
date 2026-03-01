@@ -28,6 +28,16 @@ additional_redirect_urls = ["http://localhost:4000"]
 enable_signup = true
 double_confirm_changes = false
 enable_confirmations = true
+# Minimum cooldown between emails sent to the same address (prevents email spam)
+max_frequency = "1m"
+
+[auth.rate_limit]
+# Max OTP / magic-link verifications per 5 minutes
+token_verifications = 30
+# Max token refreshes per 5 minutes (covers MFA challenge/verify)
+token_refresh = 150
+# NOTE: sign_in_sign_ups and email_sent not supported in this GoTrue version
+# → sign-in rate limiting is handled by proxy.ts (page load) + client-side backoff
 
 # SMTP — send real verification emails via Gmail
 # Env vars defined in .env.local (see .env.local.example)

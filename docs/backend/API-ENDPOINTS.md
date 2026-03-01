@@ -2,17 +2,75 @@
 project: AncestorTree
 path: docs/backend/API-ENDPOINTS.md
 type: api-reference
-version: 1.1.0
-updated: 2026-02-28
+version: 1.2.0
+updated: 2026-03-01
 owner: team
 status: approved
 ---
 
-# API Endpoints — AncestorTree v2.2.1
+# API Endpoints — AncestorTree v2.3.0
 
 > **Kiến trúc:** Next.js App Router + Supabase PostgREST
 > **Auth:** Supabase JWT (cookie-based via `@supabase/ssr`)
 > **Desktop mode:** SQLite shim qua `/api/desktop-db`
+
+---
+
+## 0. Rate Limiting
+
+> **Ưu tiên:** Vận hành (không siết chặt). Cho phép người dùng hợp lệ hoạt động bình thường, chặn bot/brute force cơ bản.
+
+### 0.1 Kiến trúc 3 lớp
+
+| Lớp | Nơi thực thi | Phạm vi |
+|-----|-------------|---------|
+| **GoTrue** | Supabase Auth server | Chặn brute force trực tiếp vào `/auth/v1/*` |
+| **proxy.ts** | Next.js Middleware | Giới hạn tải trang auth theo IP |
+| **Client-side** | `login/page.tsx` | Backoff UX sau N lần thất bại liên tiếp |
+
+### 0.2 GoTrue Rate Limits (`supabase/config.toml`)
+
+| Endpoint | Giới hạn | Cửa sổ |
+|----------|----------|--------|
+| Sign-in / Sign-up | 30 lần | 5 phút / IP |
+| OTP / Token verification | 30 lần | 5 phút / IP |
+| Token refresh | 150 lần | 5 phút / IP |
+| Email gửi (reset, confirm) | 5 lần | 1 giờ / IP |
+| Email cooldown | 1 lần | 1 phút / địa chỉ |
+
+### 0.3 Middleware Rate Limits (`proxy.ts`)
+
+Áp dụng cho tất cả request (GET + POST) đến trang auth theo IP (`X-Forwarded-For`).
+
+| Path | Max | Cửa sổ | Mục đích |
+|------|-----|--------|---------|
+| `/login` | 20 | 60s | Ngăn page enumeration |
+| `/register` | 10 | 60s | Ngăn spam đăng ký |
+| `/forgot-password` | 6 | 5 phút | Ngăn email spam |
+| `/reset-password` | 10 | 60s | Ngăn brute force token |
+
+**Response khi vượt giới hạn:**
+```
+HTTP 429 Too Many Requests
+Retry-After: <seconds>
+X-RateLimit-Limit: <max>
+X-RateLimit-Remaining: 0
+Content-Type: application/json
+
+{ "error": "Quá nhiều yêu cầu. Vui lòng thử lại sau.", "retryAfter": <seconds> }
+```
+
+### 0.4 Client-side Backoff (`login/page.tsx`)
+
+Bảo vệ luồng `signInWithPassword` (gọi trực tiếp GoTrue, bypass proxy).
+
+| Lần thất bại | Khóa |
+|-------------|------|
+| ≥ 5 lần | 30 giây |
+| ≥ 8 lần | 120 giây |
+| ≥ 12 lần | 300 giây |
+
+Nút "Đăng nhập" hiển thị countdown `Thử lại sau Xs` khi đang bị khóa. Bộ đếm reset về 0 khi đăng nhập thành công.
 
 ---
 

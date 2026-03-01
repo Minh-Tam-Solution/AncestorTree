@@ -147,6 +147,23 @@ function TotpStep({ factorId, onSuccess, onBack }: TotpStepProps) {
   );
 }
 
+// ─── Login backoff config ──────────────────────────────────────────────────────
+// Client-side protection: direct Supabase auth calls bypass the proxy, so this
+// adds a UX-level cooldown after consecutive failures (stops naive automation).
+const LOCKOUT_STEPS = [
+  { failsRequired: 5,  lockSec: 30  },
+  { failsRequired: 8,  lockSec: 120 },
+  { failsRequired: 12, lockSec: 300 },
+];
+
+function getLockoutSec(failCount: number): number {
+  let sec = 0;
+  for (const step of LOCKOUT_STEPS) {
+    if (failCount >= step.failsRequired) sec = step.lockSec;
+  }
+  return sec;
+}
+
 // ─── Inner login form (needs useSearchParams — must be inside Suspense) ────────
 
 function LoginForm() {
@@ -163,6 +180,26 @@ function LoginForm() {
   // MFA state — challenge lifecycle is managed inside TotpStep (useEffect on mount)
   const [totpFactorId, setTotpFactorId] = useState<string | null>(null);
 
+  // Client-side brute-force backoff
+  const [failCount, setFailCount] = useState(0);
+  const [lockedUntil, setLockedUntil] = useState<number>(0);
+  const [remainingSec, setRemainingSec] = useState(0);
+
+  // Countdown ticker
+  useEffect(() => {
+    if (lockedUntil <= 0) return;
+    const tick = () => {
+      const left = Math.max(0, Math.ceil((lockedUntil - Date.now()) / 1000));
+      setRemainingSec(left);
+      if (left === 0) setLockedUntil(0);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [lockedUntil]);
+
+  const isLocked = lockedUntil > Date.now();
+
   // Show suspended error from query param
   useEffect(() => {
     if (searchParams.get('error') === 'suspended') {
@@ -170,12 +207,17 @@ function LoginForm() {
     }
   }, [searchParams]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (isLocked) return;
     setIsLoading(true);
 
     try {
       await signIn(email, password);
+
+      // Reset fail counter on success
+      setFailCount(0);
+      setLockedUntil(0);
 
       // Check if MFA (AAL2) is required
       const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
@@ -196,7 +238,15 @@ function LoginForm() {
       window.location.replace('/');
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Đăng nhập thất bại';
-      toast.error(message);
+      const newFails = failCount + 1;
+      setFailCount(newFails);
+      const lockSec = getLockoutSec(newFails);
+      if (lockSec > 0) {
+        setLockedUntil(Date.now() + lockSec * 1000);
+        toast.error(`Sai thông tin đăng nhập nhiều lần. Thử lại sau ${lockSec} giây.`);
+      } else {
+        toast.error(message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -261,8 +311,12 @@ function LoginForm() {
                     Quên mật khẩu?
                   </Link>
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+                <Button type="submit" className="w-full" disabled={isLoading || isLocked}>
+                  {isLoading
+                    ? 'Đang đăng nhập...'
+                    : isLocked
+                    ? `Thử lại sau ${remainingSec}s`
+                    : 'Đăng nhập'}
                 </Button>
               </form>
 

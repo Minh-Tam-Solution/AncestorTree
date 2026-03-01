@@ -16,6 +16,10 @@ import {
   updateUserRole,
   updateLinkedPerson,
   updateEditRootPerson,
+  suspendUser,
+  unsuspendUser,
+  verifyUser,
+  getUnverifiedProfiles,
 } from '@/lib/supabase-data';
 import { deleteUserAccount } from '@/app/(main)/admin/users/actions';
 import type { Profile, UserRole } from '@/types';
@@ -102,6 +106,51 @@ export function useUpdateEditRootPerson() {
       updateEditRootPerson(userId, personId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: profileKeys.all });
+    },
+  });
+}
+
+// Sprint 12: suspend / unsuspend / delete / verify user
+
+export function useSuspendUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, reason }: { userId: string; reason?: string }) =>
+      suspendUser(userId, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKeys.all });
+    },
+  });
+}
+
+export function useUnsuspendUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => unsuspendUser(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKeys.all });
+    },
+  });
+}
+
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => deleteUserAccount(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKeys.all });
+    },
+  });
+}
+
+export function useVerifyUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, verified }: { userId: string; verified: boolean }) =>
+      verifyUser(userId, verified),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKeys.all });
+      queryClient.invalidateQueries({ queryKey: profileKeys.unverified() });
     },
   });
 }

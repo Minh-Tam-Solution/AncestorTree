@@ -106,6 +106,11 @@ export interface Profile {
   avatar_url?: string;
   created_at: string;
   updated_at: string;
+  // Sprint 12: verification + suspension
+  is_verified?: boolean;
+  can_verify_members?: boolean;
+  is_suspended?: boolean;
+  suspension_reason?: string;
 }
 
 // ─── Contribution ─────────────────────────────────────────────────────────────

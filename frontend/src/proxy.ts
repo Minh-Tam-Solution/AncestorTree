@@ -2,8 +2,8 @@
  * @project AncestorTree
  * @file src/middleware.ts
  * @description Auth middleware for protected routes — Next.js 16 convention
- * @version 1.5.0
- * @updated 2026-02-28
+ * @version 1.6.0
+ * @updated 2026-03-01
  *
  * Docker networking fix:
  *   The browser client uses NEXT_PUBLIC_SUPABASE_URL (http://localhost:54321).
@@ -14,11 +14,63 @@
  *   The server (proxy) must use the SAME URL to look for the SAME cookie name.
  *   But inside Docker, localhost = the container (not the host). So network calls
  *   must be routed to host.docker.internal:54321 via a custom fetch wrapper.
+ *
+ * Rate limiting (in-memory, works in self-hosted next start / Docker):
+ *   - Auth pages (GET): prevents automated page enumeration
+ *   - Module-level Map persists across requests in the same process
+ *   - Primary defense is GoTrue (config.toml [auth.rate_limit]); this is secondary layer
  */
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+
+// ─── Rate Limiting ────────────────────────────────────────────────────────────
+
+interface RateEntry { count: number; windowStart: number; }
+
+// Module-level store — persists across requests in self-hosted Next.js (next start / Docker).
+// In true Edge workers (Vercel), each isolate is fresh — that's fine; GoTrue handles it there.
+const _rateLimitStore = new Map<string, RateEntry>();
+
+// Limits: deliberately lenient (operational priority) — stops bots, not impatient humans.
+const RATE_LIMITS: Record<string, { max: number; windowMs: number }> = {
+  '/login':           { max: 20, windowMs: 60_000 },   // 20 page loads/min
+  '/register':        { max: 10, windowMs: 60_000 },   // 10 page loads/min
+  '/forgot-password': { max:  6, windowMs: 300_000 },  // 6 loads/5 min
+  '/reset-password':  { max: 10, windowMs: 60_000 },   // 10 page loads/min
+};
+
+function _getClientIp(req: NextRequest): string {
+  return (
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    req.headers.get('x-real-ip') ??
+    '0.0.0.0'
+  );
+}
+
+function _checkRateLimit(ip: string, pathname: string): { allowed: boolean; retryAfterSec: number } {
+  const cfg = RATE_LIMITS[pathname];
+  if (!cfg) return { allowed: true, retryAfterSec: 0 };
+
+  const key = `${ip}:${pathname}`;
+  const now = Date.now();
+  const entry = _rateLimitStore.get(key);
+
+  // Passive cleanup: reset if window has expired
+  if (!entry || now - entry.windowStart > cfg.windowMs) {
+    _rateLimitStore.set(key, { count: 1, windowStart: now });
+    return { allowed: true, retryAfterSec: 0 };
+  }
+
+  if (entry.count >= cfg.max) {
+    const retryAfterSec = Math.ceil((cfg.windowMs - (now - entry.windowStart)) / 1000);
+    return { allowed: false, retryAfterSec };
+  }
+
+  entry.count++;
+  return { allowed: true, retryAfterSec: 0 };
+}
 
 // Public paths: accessible without authentication (auth pages + landing + debug)
 const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password', '/welcome', '/api/debug'];
@@ -79,6 +131,28 @@ export async function proxy(request: NextRequest) {
   if (process.env.NEXT_PUBLIC_DESKTOP_MODE === 'true') {
     mwLog('INFO', 'desktop_bypass', { pathname });
     return NextResponse.next({ request: { headers: request.headers } });
+  }
+
+  // Rate limiting — secondary layer for auth page enumeration protection.
+  // Primary defense: GoTrue rate limits in supabase/config.toml [auth.rate_limit].
+  if (pathname in RATE_LIMITS) {
+    const ip = _getClientIp(request);
+    const { allowed, retryAfterSec } = _checkRateLimit(ip, pathname);
+    if (!allowed) {
+      mwLog('WARN', 'rate_limit_exceeded', { pathname, ip, retryAfterSec });
+      return new NextResponse(
+        JSON.stringify({ error: 'Quá nhiều yêu cầu. Vui lòng thử lại sau.', retryAfter: retryAfterSec }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'Retry-After': String(retryAfterSec),
+            'X-RateLimit-Limit': String(RATE_LIMITS[pathname]?.max ?? 0),
+            'X-RateLimit-Remaining': '0',
+          },
+        }
+      );
+    }
   }
 
   let response = NextResponse.next({

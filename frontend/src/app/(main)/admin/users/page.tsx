@@ -8,8 +8,17 @@
 
 'use client';
 
-import { useState } from 'react';
-import { useProfiles, useUpdateUserRole, useUpdateLinkedPerson, useUpdateEditRootPerson } from '@/hooks/use-profiles';
+import { useState, useMemo } from 'react';
+import {
+  useProfiles,
+  useUpdateUserRole,
+  useUpdateLinkedPerson,
+  useUpdateEditRootPerson,
+  useSuspendUser,
+  useUnsuspendUser,
+  useDeleteUser,
+  useVerifyUser,
+} from '@/hooks/use-profiles';
 import { useSearchPeople, usePerson } from '@/hooks/use-people';
 import { useAuth } from '@/components/auth/auth-provider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -57,6 +66,7 @@ import {
   Users,
   ArrowLeft,
   Shield,
+  ShieldCheck,
   UserCog,
   Loader2,
   CheckCircle,
@@ -64,6 +74,9 @@ import {
   Search,
   X,
   GitBranch,
+  Clock,
+  Ban,
+  Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -323,10 +336,15 @@ export default function UsersPage() {
   const [suspendReason, setSuspendReason] = useState('');
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; user: Profile } | null>(null);
 
-  const unverifiedCount = (profiles ?? []).filter((p) => !p.is_verified).length;
-  const displayedProfiles = showUnverifiedOnly
-    ? (profiles ?? []).filter((p) => !p.is_verified)
-    : (profiles ?? []);
+  const unverifiedCount = useMemo(
+    () => (profiles ?? []).filter((p) => !p.is_verified).length,
+    [profiles],
+  );
+
+  const displayedProfiles = useMemo(
+    () => showUnverifiedOnly ? (profiles ?? []).filter((p) => !p.is_verified) : (profiles ?? []),
+    [profiles, showUnverifiedOnly],
+  );
 
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -337,25 +355,6 @@ export default function UsersPage() {
   } | null>(null);
 
   const [mappingUser, setMappingUser] = useState<Profile | null>(null);
-  const [suspendDialog, setSuspendDialog] = useState<{ open: boolean; user: Profile } | null>(null);
-  const [suspendReason, setSuspendReason] = useState('');
-  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; user: Profile } | null>(null);
-  const [showUnverifiedOnly, setShowUnverifiedOnly] = useState(false);
-
-  const suspendMutation = useSuspendUser();
-  const unsuspendMutation = useUnsuspendUser();
-  const deleteMutation = useDeleteUser();
-  const verifyMutation = useVerifyUser();
-
-  const unverifiedCount = useMemo(
-    () => (profiles ?? []).filter((p) => !p.is_verified).length,
-    [profiles],
-  );
-
-  const displayedProfiles = useMemo(
-    () => showUnverifiedOnly ? (profiles ?? []).filter((p) => !p.is_verified) : (profiles ?? []),
-    [profiles, showUnverifiedOnly],
-  );
 
   const handleRoleChange = (userId: string, newRole: UserRole, currentRole: UserRole, userName: string) => {
     if (newRole === currentRole) return;
