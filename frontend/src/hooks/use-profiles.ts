@@ -110,10 +110,10 @@ export function useUpdateEditRootPerson() {
   });
 }
 
-// Sprint 12: suspend / unsuspend / delete / verify user
-
+// FR-512: suspend a user account
 export function useSuspendUser() {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ userId, reason }: { userId: string; reason?: string }) =>
       suspendUser(userId, reason),
@@ -123,8 +123,10 @@ export function useSuspendUser() {
   });
 }
 
+// FR-512: unsuspend a user account
 export function useUnsuspendUser() {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (userId: string) => unsuspendUser(userId),
     onSuccess: () => {
@@ -133,24 +135,28 @@ export function useUnsuspendUser() {
   });
 }
 
-export function useDeleteUser() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (userId: string) => deleteUserAccount(userId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: profileKeys.all });
-    },
-  });
-}
-
+// FR-511: verify/unverify a user account
 export function useVerifyUser() {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ userId, verified }: { userId: string; verified: boolean }) =>
       verifyUser(userId, verified),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: profileKeys.all });
       queryClient.invalidateQueries({ queryKey: profileKeys.unverified() });
+    },
+  });
+}
+
+// FR-513: delete a user account permanently
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (userId: string) => deleteUserAccount(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKeys.all });
     },
   });
 }

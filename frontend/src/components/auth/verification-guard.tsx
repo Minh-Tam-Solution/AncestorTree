@@ -13,7 +13,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/components/auth/auth-provider';
 
 export function VerificationGuard({ children }: { children: React.ReactNode }) {
-  const { user, isVerified, isLoading } = useAuth();
+  const { user, profile, isVerified, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -22,11 +22,13 @@ export function VerificationGuard({ children }: { children: React.ReactNode }) {
     if (isLoading || !user) return;
     // Desktop mode: always verified
     if (process.env.NEXT_PUBLIC_DESKTOP_MODE === 'true') return;
+    // Admin and editor bypass verification — they ARE the verifiers
+    if (profile?.role === 'admin' || profile?.role === 'editor') return;
     // Redirect unverified users to pending page
     if (!isVerified && pathname !== '/pending-verification') {
       router.replace('/pending-verification');
     }
-  }, [user, isVerified, isLoading, router, pathname]);
+  }, [user, profile, isVerified, isLoading, router, pathname]);
 
   return <>{children}</>;
 }

@@ -104,13 +104,12 @@ export interface Profile {
   /** FK → people.id: subtree root this user can edit (null = global editor) */
   edit_root_person_id?: string;
   avatar_url?: string;
-  created_at: string;
-  updated_at: string;
-  // Sprint 12: verification + suspension
   is_verified?: boolean;
   can_verify_members?: boolean;
   is_suspended?: boolean;
   suspension_reason?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 // ─── Contribution ─────────────────────────────────────────────────────────────
