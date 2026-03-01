@@ -1367,8 +1367,19 @@ frontend/
 | **Nhà thờ họ** | Thông tin, bản đồ, ảnh 360°, lịch sử | P2 |
 | **Đa ngôn ngữ** | English UI cho Việt kiều (next-intl) | P2 |
 | **Cross-clan** | Kết nối liên dòng họ, shared events | P3 |
-| **Multi-tenant** | Nhiều dòng họ trên 1 instance | P3 |
+| **Multi-tenant SaaS** | Nhiều dòng họ trên 1 instance — tenant isolation, onboarding, billing | P3 |
 | **PWA Mobile** | Progressive Web App cho điện thoại | P2 |
+
+> **Multi-tenant SaaS Note (2026-03-01):**
+> Hiện tại [ancestortree.info](https://ancestortree.info) chỉ phục vụ riêng chi tộc Đặng Đình,
+> Thạch Lâm, Hà Tĩnh — không phải SaaS platform. Nếu có thời gian, sẽ phát triển thành
+> multi-tenant platform cho nhiều dòng họ. Yêu cầu:
+>
+> - Tenant isolation (DB schema per tenant hoặc RLS-based)
+> - Onboarding flow (tạo dòng họ mới, invite thành viên)
+> - Custom branding per tenant (tên dòng họ, logo, màu sắc)
+> - Billing & subscription (nếu SaaS thương mại)
+> - Admin dashboard per tenant vs super-admin cross-tenant
 
 ---
 
