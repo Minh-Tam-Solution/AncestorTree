@@ -87,15 +87,21 @@ CREATE TABLE IF NOT EXISTS children (
 
 -- 4. Profiles (user accounts)
 CREATE TABLE IF NOT EXISTS profiles (
-    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id         UUID UNIQUE NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    email           VARCHAR(255),
-    full_name       VARCHAR(255),
-    role            VARCHAR(20) DEFAULT 'viewer' CHECK (role IN ('admin', 'editor', 'viewer')),
-    linked_person   UUID REFERENCES people(id) ON DELETE SET NULL,
-    avatar_url      TEXT,
-    created_at      TIMESTAMPTZ DEFAULT NOW(),
-    updated_at      TIMESTAMPTZ DEFAULT NOW()
+    id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id             UUID UNIQUE NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    email               VARCHAR(255),
+    full_name           VARCHAR(255),
+    role                VARCHAR(20) DEFAULT 'viewer' CHECK (role IN ('admin', 'editor', 'viewer')),
+    linked_person       UUID REFERENCES people(id) ON DELETE SET NULL,
+    avatar_url          TEXT,
+    -- Verification & moderation (Sprint 12)
+    is_verified         BOOLEAN NOT NULL DEFAULT false,
+    can_verify_members  BOOLEAN NOT NULL DEFAULT false,
+    is_suspended        BOOLEAN NOT NULL DEFAULT false,
+    suspension_reason   TEXT,
+    -- Timestamps
+    created_at          TIMESTAMPTZ DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- 5. Contributions (edit suggestions)
