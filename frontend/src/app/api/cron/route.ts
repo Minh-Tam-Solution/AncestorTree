@@ -26,7 +26,7 @@ export async function GET(request: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Fetch the ID to verify data connectivity
+    // Fetch the value to verify data connectivity
     const { data, error } = await supabase
       .from('clan_settings')
       .select('clan_name')
@@ -40,7 +40,7 @@ export async function GET(request: Request) {
     return new Response(JSON.stringify({ 
       success: true, 
       message: "Database pinged successfully.",
-      fetched_id: data && data.length > 0 ? data[0].id : "No records found",
+      fetched_name: data && data.length > 0 ? data[0].clan_name : "No records found",
       raw_data: data 
     }), { 
       status: 200,
@@ -55,3 +55,4 @@ export async function GET(request: Request) {
     });
   }
 }
+
