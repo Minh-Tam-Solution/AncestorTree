@@ -4,6 +4,7 @@
   "buildCommand": "pnpm build",
   "installCommand": "pnpm install",
   "outputDirectory": ".next",
+  "regions": ["sin1"]
   "crons": [
     {
       "path": "/api/cron",
