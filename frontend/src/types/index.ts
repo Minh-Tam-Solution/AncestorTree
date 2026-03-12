@@ -410,6 +410,13 @@ export interface CeremonyScheduleItem {
   description?: string;
 }
 
+export type LoginMethod = 'email_password' | 'email_otp';
+
+export interface LoginConfig {
+  methods: LoginMethod[];
+  otp_expiry_minutes?: number;
+}
+
 export interface ClanSettings {
   id: string;
   clan_name: string;
@@ -428,6 +435,7 @@ export interface ClanSettings {
   ancestral_hall_coordinates?: { lat: number; lng: number } | null;
   ancestral_hall_history?: string;
   ceremony_schedule?: CeremonyScheduleItem[];
+  login_config?: LoginConfig;
   updated_at: string;
   updated_by?: string;
 }

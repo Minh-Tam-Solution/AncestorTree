@@ -1,3 +1,11 @@
+/**
+ * @project AncestorTree
+ * @file src/app/(auth)/login/page.tsx
+ * @description Login page — email+password or OTP email (configurable)
+ * @version 2.1.0
+ * @updated 2026-03-22
+ */
+
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
@@ -12,7 +20,8 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { CLAN_NAME } from '@/lib/clan-config';
 import { useClanSettings } from '@/hooks/use-clan-settings';
-import { ShieldCheck, ArrowLeft, Loader2 } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, Loader2, Mail, KeyRound } from 'lucide-react';
+import type { LoginMethod } from '@/types';
 
 // ─── TOTP second step ──────────────────────────────────────────────────────────
 
@@ -25,8 +34,6 @@ interface TotpStepProps {
 function TotpStep({ factorId, onSuccess, onBack }: TotpStepProps) {
   const [code, setCode] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
-  // Challenge is created on mount (after the component renders, isolated from parent's async flow).
-  // Keeping state internal avoids timing races between signIn's onAuthStateChange and verify.
   const [challengeId, setChallengeId] = useState<string | null>(null);
 
   const requestChallenge = async () => {
@@ -42,9 +49,6 @@ function TotpStep({ factorId, onSuccess, onBack }: TotpStepProps) {
     }
   };
 
-  // Create challenge immediately after mount so it is ready before user opens the authenticator app.
-  // useEffect runs after paint — by then, signIn's onAuthStateChange handler has fully settled,
-  // eliminating the noopLock race window that caused concurrent _acquireLock collisions.
   useEffect(() => {
     let cancelled = false;
     supabase.auth.mfa.challenge({ factorId }).then(({ data, error }) => {
@@ -66,17 +70,14 @@ function TotpStep({ factorId, onSuccess, onBack }: TotpStepProps) {
       let verifyError: Error | null = null;
 
       if (challengeId) {
-        // Pre-created challenge: mfa.verify() goes straight to _verify, no _challengeAndVerify.
         const { error } = await supabase.auth.mfa.verify({ factorId, challengeId, code });
         verifyError = error ?? null;
       } else {
-        // Fallback: challenge was not ready yet (e.g. very fast user, or network hiccup).
         const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId, code });
         verifyError = error ?? null;
       }
 
       if (verifyError) {
-        // Refresh challenge so the next attempt works (old challenge is consumed/expired).
         await requestChallenge();
         const is422 = (verifyError as unknown as { status?: number }).status === 422;
         toast.error(
@@ -147,9 +148,155 @@ function TotpStep({ factorId, onSuccess, onBack }: TotpStepProps) {
   );
 }
 
+// ─── OTP Email step ────────────────────────────────────────────────────────────
+
+interface OtpStepProps {
+  onBack: () => void;
+}
+
+function OtpEmailForm({ onBack }: OtpStepProps) {
+  const [otpStep, setOtpStep] = useState<'email' | 'code'>('email');
+  const [otpEmail, setOtpEmail] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otpEmail.trim()) return;
+    setIsSending(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: otpEmail.trim(),
+        options: { shouldCreateUser: false },
+      });
+      if (error) {
+        // shouldCreateUser=false → Supabase returns error for unregistered email
+        if (error.message?.toLowerCase().includes('signups not allowed')) {
+          toast.error('Email này chưa có tài khoản. Vui lòng đăng ký trước.');
+        } else {
+          toast.error(error.message ?? 'Không thể gửi mã OTP');
+        }
+        return;
+      }
+      toast.success('Mã OTP đã được gửi đến email của bạn');
+      setOtpStep('code');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Không thể gửi mã OTP');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otpCode.length !== 6) return;
+    setIsVerifying(true);
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email: otpEmail.trim(),
+        token: otpCode.trim(),
+        type: 'email',
+      });
+      if (error) {
+        const is422 = (error as unknown as { status?: number }).status === 422;
+        toast.error(
+          is422
+            ? 'Mã OTP không đúng hoặc đã hết hạn. Vui lòng thử lại.'
+            : (error.message ?? 'Mã OTP không hợp lệ')
+        );
+        setOtpCode('');
+        return;
+      }
+      toast.success('Đăng nhập thành công!');
+      window.location.replace('/');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Đăng nhập thất bại');
+      setOtpCode('');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  if (otpStep === 'code') {
+    return (
+      <form onSubmit={handleVerifyOtp} className="space-y-4">
+        <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
+          <Mail className="h-5 w-5 text-blue-600 shrink-0" />
+          <p className="text-sm text-blue-800">
+            Mã OTP đã gửi đến <strong>{otpEmail}</strong>. Kiểm tra hộp thư (kể cả spam).
+          </p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="otp-code">Mã OTP (6 chữ số)</Label>
+          <Input
+            id="otp-code"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={6}
+            placeholder="000000"
+            value={otpCode}
+            onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+            className="text-center text-2xl tracking-[0.5em] font-mono"
+            autoFocus
+            required
+          />
+          <p className="text-xs text-muted-foreground">Mã có hiệu lực trong 15 phút</p>
+        </div>
+        <Button type="submit" className="w-full" disabled={isVerifying || otpCode.length !== 6}>
+          {isVerifying ? (
+            <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Đang xác nhận...</>
+          ) : 'Đăng nhập'}
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full"
+          onClick={() => { setOtpStep('email'); setOtpCode(''); }}
+          disabled={isVerifying}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Đổi email
+        </Button>
+      </form>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSendOtp} className="space-y-4">
+      <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
+        <Mail className="h-5 w-5 text-blue-600 shrink-0" />
+        <p className="text-sm text-blue-800">
+          Nhập email đã đăng ký — chúng tôi sẽ gửi mã OTP 6 chữ số để đăng nhập ngay, không cần mật khẩu.
+        </p>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="otp-email">Email</Label>
+        <Input
+          id="otp-email"
+          type="email"
+          placeholder="email@example.com"
+          value={otpEmail}
+          onChange={(e) => setOtpEmail(e.target.value)}
+          autoFocus
+          required
+        />
+      </div>
+      <Button type="submit" className="w-full" disabled={isSending}>
+        {isSending ? (
+          <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Đang gửi mã...</>
+        ) : 'Gửi mã OTP'}
+      </Button>
+      <Button type="button" variant="ghost" className="w-full" onClick={onBack}>
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Đăng nhập bằng mật khẩu
+      </Button>
+    </form>
+  );
+}
+
 // ─── Login backoff config ──────────────────────────────────────────────────────
-// Client-side protection: direct Supabase auth calls bypass the proxy, so this
-// adds a UX-level cooldown after consecutive failures (stops naive automation).
 const LOCKOUT_STEPS = [
   { failsRequired: 5,  lockSec: 30  },
   { failsRequired: 8,  lockSec: 120 },
@@ -164,7 +311,7 @@ function getLockoutSec(failCount: number): number {
   return sec;
 }
 
-// ─── Inner login form (needs useSearchParams — must be inside Suspense) ────────
+// ─── Inner login form ──────────────────────────────────────────────────────────
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -174,10 +321,20 @@ function LoginForm() {
   const clanName = cs?.clan_name ?? CLAN_NAME;
   const parts = clanName.trim().split(' ');
   const clanInitial = parts.length > 1 ? (parts[parts.length - 1][0] ?? '?') : (parts[0][0] ?? '?');
+
+  // Determine enabled methods (default: both)
+  const enabledMethods: LoginMethod[] = cs?.login_config?.methods ?? ['email_password', 'email_otp'];
+  const hasPassword = enabledMethods.includes('email_password');
+  const hasOtp = enabledMethods.includes('email_otp');
+
+  // Active tab: default to password if enabled, else OTP
+  const defaultTab: 'password' | 'otp' = hasPassword ? 'password' : 'otp';
+  const [activeTab, setActiveTab] = useState<'password' | 'otp'>(defaultTab);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // MFA state — challenge lifecycle is managed inside TotpStep (useEffect on mount)
+  // MFA state
   const [totpFactorId, setTotpFactorId] = useState<string | null>(null);
 
   // Client-side brute-force backoff
@@ -185,7 +342,6 @@ function LoginForm() {
   const [lockedUntil, setLockedUntil] = useState<number>(0);
   const [remainingSec, setRemainingSec] = useState(0);
 
-  // Countdown ticker
   useEffect(() => {
     if (lockedUntil <= 0) return;
     const tick = () => {
@@ -200,7 +356,6 @@ function LoginForm() {
 
   const isLocked = lockedUntil > Date.now();
 
-  // Show suspended error from query param
   useEffect(() => {
     if (searchParams.get('error') === 'suspended') {
       toast.error('Tài khoản của bạn đã bị khoá. Vui lòng liên hệ quản trị viên.');
@@ -215,26 +370,21 @@ function LoginForm() {
     try {
       await signIn(email, password);
 
-      // Reset fail counter on success
       setFailCount(0);
       setLockedUntil(0);
 
-      // Check if MFA (AAL2) is required
       const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       if (aalData?.currentLevel === 'aal1' && aalData?.nextLevel === 'aal2') {
-        // MFA enrolled — get first verified TOTP factor
         const { data: factorsData } = await supabase.auth.mfa.listFactors();
         const totp = factorsData?.totp?.find((f) => f.status === 'verified');
         if (totp) {
           setTotpFactorId(totp.id);
           setIsLoading(false);
-          return; // Show TOTP step — TotpStep creates the challenge in its useEffect
+          return;
         }
       }
 
-      // No MFA or already at AAL2 — proceed
       toast.success('Đăng nhập thành công!');
-      // Full page navigation to ensure auth cookies are sent in the next request.
       window.location.replace('/');
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Đăng nhập thất bại';
@@ -252,15 +402,24 @@ function LoginForm() {
     }
   };
 
-  const handleTotpSuccess = () => {
-    window.location.replace('/');
-  };
+  const handleTotpSuccess = () => window.location.replace('/');
 
   const handleTotpBack = async () => {
     await supabase.auth.signOut();
     setTotpFactorId(null);
     setPassword('');
   };
+
+  // Determine card title/description based on current view
+  let cardTitle = 'Đăng nhập';
+  let cardDescription = 'Cổng thông tin gia phả';
+  if (totpFactorId) {
+    cardTitle = 'Xác thực 2 bước';
+    cardDescription = 'Nhập mã từ ứng dụng xác thực';
+  } else if (activeTab === 'otp') {
+    cardTitle = 'Đăng nhập bằng mã OTP';
+    cardDescription = 'Không cần mật khẩu';
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-emerald-100 p-4">
@@ -269,10 +428,8 @@ function LoginForm() {
           <div className="mx-auto w-12 h-12 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-bold text-xl mb-4">
             {clanInitial}
           </div>
-          <CardTitle>{totpFactorId ? 'Xác thực 2 bước' : 'Đăng nhập'}</CardTitle>
-          <CardDescription>
-            {totpFactorId ? 'Nhập mã từ ứng dụng xác thực' : 'Cổng thông tin gia phả'}
-          </CardDescription>
+          <CardTitle>{cardTitle}</CardTitle>
+          <CardDescription>{cardDescription}</CardDescription>
         </CardHeader>
         <CardContent>
           {totpFactorId ? (
@@ -283,49 +440,89 @@ function LoginForm() {
             />
           ) : (
             <>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="email@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
+              {/* Tab switcher — only shown when both methods are enabled */}
+              {hasPassword && hasOtp && (
+                <div className="flex rounded-lg border bg-muted/40 p-1 mb-5 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('password')}
+                    className={`flex-1 flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                      activeTab === 'password'
+                        ? 'bg-white shadow-sm text-foreground'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <KeyRound className="h-3.5 w-3.5" />
+                    Mật khẩu
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('otp')}
+                    className={`flex-1 flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                      activeTab === 'otp'
+                        ? 'bg-white shadow-sm text-foreground'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <Mail className="h-3.5 w-3.5" />
+                    Mã OTP
+                  </button>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Mật khẩu</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="flex justify-end">
-                  <Link href="/forgot-password" className="text-sm text-emerald-600 hover:underline">
-                    Quên mật khẩu?
-                  </Link>
-                </div>
-                <Button type="submit" className="w-full" disabled={isLoading || isLocked}>
-                  {isLoading
-                    ? 'Đang đăng nhập...'
-                    : isLocked
-                    ? `Thử lại sau ${remainingSec}s`
-                    : 'Đăng nhập'}
-                </Button>
-              </form>
+              )}
 
-              <div className="mt-4 text-center text-sm">
-                <span className="text-muted-foreground">Chưa có tài khoản? </span>
-                <Link href="/register" className="text-emerald-600 hover:underline">
-                  Đăng ký
-                </Link>
-              </div>
+              {/* Password login */}
+              {activeTab === 'password' && hasPassword && (
+                <>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="email@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Mật khẩu</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="flex justify-end">
+                      <Link href="/forgot-password" className="text-sm text-emerald-600 hover:underline">
+                        Quên mật khẩu?
+                      </Link>
+                    </div>
+                    <Button type="submit" className="w-full" disabled={isLoading || isLocked}>
+                      {isLoading
+                        ? 'Đang đăng nhập...'
+                        : isLocked
+                        ? `Thử lại sau ${remainingSec}s`
+                        : 'Đăng nhập'}
+                    </Button>
+                  </form>
+
+                  <div className="mt-4 text-center text-sm">
+                    <span className="text-muted-foreground">Chưa có tài khoản? </span>
+                    <Link href="/register" className="text-emerald-600 hover:underline">
+                      Đăng ký
+                    </Link>
+                  </div>
+                </>
+              )}
+
+              {/* OTP email login */}
+              {activeTab === 'otp' && hasOtp && (
+                <OtpEmailForm onBack={() => setActiveTab('password')} />
+              )}
             </>
           )}
         </CardContent>
@@ -334,7 +531,7 @@ function LoginForm() {
   );
 }
 
-// ─── Page wrapper — useSearchParams requires Suspense boundary ─────────────────
+// ─── Page wrapper ──────────────────────────────────────────────────────────────
 
 export default function LoginPage() {
   return (

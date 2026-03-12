@@ -19,11 +19,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Settings, Globe, Database, Save, Loader2, Users, Landmark, Plus, Trash2, Calendar } from 'lucide-react';
+import { Settings, Globe, Database, Save, Loader2, Users, Landmark, Plus, Trash2, Calendar, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { CLAN_NAME as ENV_CLAN_NAME, CLAN_FULL_NAME as ENV_CLAN_FULL_NAME } from '@/lib/clan-config';
-import type { UpdateClanSettingsInput, CouncilMember, CeremonyScheduleItem } from '@/types';
+import type { UpdateClanSettingsInput, CouncilMember, CeremonyScheduleItem, LoginMethod } from '@/types';
 
 const isDesktop = process.env.NEXT_PUBLIC_DESKTOP_MODE === 'true';
 const APP_VERSION = 'v3.0.0';
@@ -58,6 +58,9 @@ export default function AdminSettingsPage() {
   const [hallAddress, setHallAddress] = useState('');
   const [hallHistory, setHallHistory] = useState('');
   const [ceremonies, setCeremonies] = useState<CeremonyScheduleItem[]>([]);
+  // Login config
+  const [loginMethods, setLoginMethods] = useState<LoginMethod[]>(['email_password', 'email_otp']);
+  const [isSavingLogin, setIsSavingLogin] = useState(false);
 
   useEffect(() => {
     if (!clanSettings) return;
@@ -75,6 +78,7 @@ export default function AdminSettingsPage() {
     setHallAddress(clanSettings.ancestral_hall_address ?? '');
     setHallHistory(clanSettings.ancestral_hall_history ?? '');
     setCeremonies((clanSettings.ceremony_schedule as CeremonyScheduleItem[]) ?? []);
+    setLoginMethods(clanSettings.login_config?.methods ?? ['email_password', 'email_otp']);
   }, [clanSettings]);
 
   if (!isEditor) {
@@ -123,6 +127,32 @@ export default function AdminSettingsPage() {
       router.refresh();
     } catch {
       toast.error('Lỗi khi lưu cài đặt');
+    }
+  };
+
+  const handleSaveLoginConfig = async () => {
+    if (!clanSettings) return;
+    // At least one method must be enabled
+    if (loginMethods.length === 0) {
+      toast.error('Phải bật ít nhất một phương thức đăng nhập');
+      return;
+    }
+    setIsSavingLogin(true);
+    try {
+      await updateMutation.mutateAsync({
+        id: clanSettings.id,
+        input: {
+          login_config: {
+            methods: loginMethods,
+            otp_expiry_minutes: clanSettings.login_config?.otp_expiry_minutes ?? 15,
+          },
+        },
+      });
+      toast.success('Đã lưu cấu hình đăng nhập');
+    } catch {
+      toast.error('Lỗi khi lưu cấu hình đăng nhập');
+    } finally {
+      setIsSavingLogin(false);
     }
   };
 
@@ -475,6 +505,84 @@ export default function AdminSettingsPage() {
               Thêm ngày lễ
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Login config */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Lock className="h-4 w-4" />
+            Cấu hình đăng nhập
+          </CardTitle>
+          <CardDescription>
+            Chọn phương thức đăng nhập cho thành viên. Phải bật ít nhất một phương thức.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-3">
+            {/* Email + Password */}
+            <label className="flex items-start gap-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/30 transition-colors">
+              <input
+                type="checkbox"
+                checked={loginMethods.includes('email_password')}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setLoginMethods((prev) => [...prev, 'email_password']);
+                  } else {
+                    setLoginMethods((prev) => prev.filter((m) => m !== 'email_password'));
+                  }
+                }}
+                className="mt-0.5"
+              />
+              <div className="flex-1">
+                <p className="font-medium text-sm">Email &amp; Mật khẩu</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Đăng nhập truyền thống bằng email và mật khẩu. Hỗ trợ xác thực 2 bước (TOTP).
+                </p>
+              </div>
+            </label>
+
+            {/* OTP Email */}
+            <label className="flex items-start gap-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/30 transition-colors">
+              <input
+                type="checkbox"
+                checked={loginMethods.includes('email_otp')}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setLoginMethods((prev) => [...prev, 'email_otp']);
+                  } else {
+                    setLoginMethods((prev) => prev.filter((m) => m !== 'email_otp'));
+                  }
+                }}
+                className="mt-0.5"
+              />
+              <div className="flex-1">
+                <p className="font-medium text-sm">Mã OTP qua Email</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Không cần mật khẩu — hệ thống gửi mã 6 chữ số đến email. Phù hợp cho thành viên cao tuổi, không rành công nghệ.
+                </p>
+                <p className="text-xs text-emerald-600 mt-1">Miễn phí • Supabase Magic Link</p>
+              </div>
+            </label>
+          </div>
+
+          {loginMethods.length === 0 && (
+            <p className="text-xs text-destructive">Vui lòng bật ít nhất một phương thức đăng nhập.</p>
+          )}
+
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleSaveLoginConfig}
+            disabled={isSavingLogin || loginMethods.length === 0 || !clanSettings}
+          >
+            {isSavingLogin ? (
+              <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Đang lưu...</>
+            ) : (
+              <><Save className="h-4 w-4 mr-2" />Lưu cấu hình đăng nhập</>
+            )}
+          </Button>
         </CardContent>
       </Card>
 

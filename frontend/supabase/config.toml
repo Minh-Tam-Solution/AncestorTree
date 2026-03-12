@@ -43,7 +43,7 @@ token_refresh = 150
 # Env vars defined in .env.local (see .env.local.example)
 [auth.email.smtp]
 host = "env(SMTP_HOST)"
-port = 587
+port = "env(SMTP_PORT)"
 user = "env(SMTP_USER)"
 pass = "env(SMTP_PASS)"
 admin_email = "env(SMTP_SENDER_EMAIL)"
