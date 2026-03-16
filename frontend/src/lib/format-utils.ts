@@ -6,6 +6,8 @@
  * @updated 2026-03-09
  */
 
+import { removeVietnameseTones } from './helper';
+
 export function getRelativeTime(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const minutes = Math.floor(diff / 60000);
@@ -21,7 +23,9 @@ export function getRelativeTime(dateStr: string): string {
 }
 
 export function getInitials(name: string): string {
-  const parts = name.trim().split(' ');
+  let normalizedName = removeVietnameseTones(name);
+
+  const parts = normalizedName.trim().split(' ');
   return parts.length > 1
     ? (parts[parts.length - 1][0] ?? '?').toUpperCase()
     : (parts[0][0] ?? '?').toUpperCase();

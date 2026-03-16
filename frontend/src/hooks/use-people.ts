@@ -8,28 +8,31 @@
 
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  getPeople,
-  getPerson,
   createPerson,
-  updatePerson,
   deletePerson,
-  searchPeople,
+  getPeople,
   getPeopleByGeneration,
+  getPerson,
   getStats,
+  searchPeople,
+  searchPeopleAdvanced,
+  updatePerson,
 } from '@/lib/supabase-data';
 import type { CreatePersonInput, UpdatePersonInput } from '@/types';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 // Query keys
 export const peopleKeys = {
   all: ['people'] as const,
   lists: () => [...peopleKeys.all, 'list'] as const,
-  list: (filters: Record<string, unknown>) => [...peopleKeys.lists(), filters] as const,
+  list: (filters: Record<string, unknown>) =>
+    [...peopleKeys.lists(), filters] as const,
   details: () => [...peopleKeys.all, 'detail'] as const,
   detail: (id: string) => [...peopleKeys.details(), id] as const,
   search: (query: string) => [...peopleKeys.all, 'search', query] as const,
-  byGeneration: (gen: number) => [...peopleKeys.all, 'generation', gen] as const,
+  byGeneration: (gen: number) =>
+    [...peopleKeys.all, 'generation', gen] as const,
   stats: () => [...peopleKeys.all, 'stats'] as const,
 };
 
@@ -59,6 +62,14 @@ export function useSearchPeople(query: string) {
   });
 }
 
+export function useSearchPeopleAdvanced(query: string, ignoreAccents: boolean = true) {
+  return useQuery({
+    queryKey: peopleKeys.search(query),
+    queryFn: () => searchPeopleAdvanced(query, ignoreAccents),
+    enabled: query.length >= 2,
+  });
+}
+
 export function usePeopleByGeneration(generation: number) {
   return useQuery({
     queryKey: peopleKeys.byGeneration(generation),
@@ -78,7 +89,7 @@ export function useStats() {
 
 export function useCreatePerson() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (input: CreatePersonInput) => createPerson(input),
     onSuccess: () => {
@@ -89,9 +100,9 @@ export function useCreatePerson() {
 
 export function useUpdatePerson() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: UpdatePersonInput }) => 
+    mutationFn: ({ id, input }: { id: string; input: UpdatePersonInput }) =>
       updatePerson(id, input),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: peopleKeys.detail(id) });
@@ -102,7 +113,7 @@ export function useUpdatePerson() {
 
 export function useDeletePerson() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (id: string) => deletePerson(id),
     onSuccess: () => {

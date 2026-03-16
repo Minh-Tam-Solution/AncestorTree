@@ -115,6 +115,22 @@ export async function searchPeople(query: string): Promise<Person[]> {
   return data || [];
 }
 
+
+export async function searchPeopleAdvanced(query: string, ignoreAccents: boolean = true): Promise<Person[]> {
+  // Escape LIKE special characters to prevent pattern injection
+  const escapedQuery = query.replace(/[%_\\]/g, '\\$&');
+
+  const { data, error } = await supabase.rpc('search_people_advanced', {
+    search_term: escapedQuery,
+    ignore_acc: ignoreAccents,
+  });
+
+  if (error) throw error;
+  return data || [];
+}
+
+
+
 export async function getPeopleByGeneration(generation: number): Promise<Person[]> {
   const { data, error } = await supabase
     .from('people')
