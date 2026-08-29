@@ -306,7 +306,7 @@ INSERT INTO public.people (id, handle, display_name, first_name, surname, gender
 (
     '11111111-0046-4000-b000-000000000046', 'P046', 'Nguyễn Trí Tuệ', 'Trí Tuệ', 'Nguyễn', 1, 5, 2, false, true,
     'Thôn Sa Long, xã Hà Linh, Hương Khê, Hà Tĩnh',
-    1932, '1932-06-01', 2025, '2025-08-22', '29/6',
+    1932, '1932-06-01', 2025, '2025-08-22', '29/6', NULL,
     'Tên gốc: Nguyễn Quốc Loan (thủa nhỏ còn gọi là Nguyễn Quốc Vinh). Con thứ hai của ông Nguyễn Quốc Phúc và bà Cố Loan. Do hoàn cảnh loạn lạc nghèo đói, thủa nhỏ từng bị cho/bán làm con nuôi. Về sau tự lập, tham gia Thanh niên xung phong, dân công hỏa tuyến và công nhân Lâm nghiệp. Năm 1960 chính thức đổi tên thành Nguyễn Trí Tuệ. Qua đời lúc 20h25 ngày 22/08/2025 (tức 29/06 Ất Tỵ), hưởng thọ 95 tuổi.',
     'An táng tại Nghĩa trang thôn 3, xã Cư Prao, huyện M''Drắk, Đắk Lắk. Ngày giỗ: 29/06 Âm lịch.',
     0
@@ -322,7 +322,7 @@ INSERT INTO public.people (id, handle, display_name, first_name, surname, gender
 (
     '11111111-0048-4000-b000-000000000048', 'P048', 'Hồ Thị Lưu', 'Lưu', 'Hồ', 2, 5, 2, false, false,
     NULL,
-    NULL, NULL, 1980, NULL, '29/9',
+    NULL, NULL, 1980, NULL, '29/9', NULL,
     'Người vợ thứ nhất của ông Nguyễn Trí Tuệ (Nguyễn Quốc Loan). Mất ngày 29/09/1980.',
     'Ngày giỗ: 29/09 Âm lịch.',
     0
@@ -331,7 +331,7 @@ INSERT INTO public.people (id, handle, display_name, first_name, surname, gender
 (
     '11111111-0049-4000-b000-000000000049', 'P049', 'Phan Thị Lập', 'Lập', 'Phan', 2, 5, 2, true, false,
     NULL,
-    NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL,
     'Người vợ thứ hai của ông Nguyễn Trí Tuệ (Nguyễn Quốc Loan).',
     NULL,
     0
